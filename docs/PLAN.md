@@ -48,7 +48,7 @@ Verify current URLs, formats, licences and access requirements yourself; don't t
 ## Phase 2 — Map frontend
 - Origin search with autocomplete: Dutch station names, tolerant of typos and abbreviations like "Utrecht CS".
 - Map of reachable stations coloured by travel time. Unreachable and unknown shown distinctly — never by colour alone.
-- Filters: max changes (0 / 1 / 2), max travel time (slider), weekday / Saturday, profile (stroller; wheelchair visible but marked "coming later").
+- Filters: max changes (0 / 1 / 2), max travel time (slider), weekday / Saturday, sprinter / intercity, profile (stroller; wheelchair visible but marked "coming later").
 - Station panel: travel time, changes, trains per hour, route via, step-free status with source and date, any current lift outages, links to the station's NS info page and the NS journey planner to double-check.
 - Clear disclaimer: indicative information, always check before travelling; wheelchair users should use NS travel assistance.
 - Map tiles from a free provider whose terms allow this use; attribution visible.

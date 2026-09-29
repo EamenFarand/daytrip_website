@@ -10,7 +10,26 @@ Read the verdict at the top of [audit/REPORT.md](../audit/REPORT.md) (a 2-minute
 My recommendation is **Go**: open data gives a step-free status for 99% of stations, refreshed daily, CC0.
 Reply "go", "go, narrowed" or "rethink", plus anything you want changed in the plan.
 
-## 2. In-person check: Houten and Houten Castellum *(before launch, not blocking)*
+## 2. Decide: what counts as a "sprinter" for the stroller profile? *(needed early in Phase 1)*
+
+You added to PLAN.md: *"Each route must be possible to ride with a 'sprinter' train, as the stroller is inconvenient with the intercity."*
+The timetable labels trains like this:
+
+| Operator | Labels in the data |
+|---|---|
+| NS | Sprinter (63 routes), Intercity (39), Intercity direct (4) |
+| Arriva, Blauwnet, RRReis, Qbuzz (R-net), Keolis | Stoptrein, Sneltrein, Sprinter, and one "Intercity" (Keolis, Zwolle–Enschede) |
+| International | ICE, Eurostar, EuroCity, Nightjet, European Sleeper, GoVolta |
+
+Options:
+
+- **A. (my recommendation)** Allow **NS Sprinter + every regional train** (all Arriva / Keolis / Qbuzz / RRReis / Blauwnet services, whatever their label). These are nearly all low-floor trains with room for a pram. Exclude NS Intercity, Intercity direct and international trains.
+- **B.** NS Sprinter and regional *Stoptrein* only (also exclude regional *Sneltrein* and Keolis *Intercity*).
+- **C.** Something else. Tell me what bothers you about intercities (the steps into double-deckers? crowding? no room?). It changes the rule. For example, NS's newer single-deck intercities (ICNG) have level boarding, but the timetable doesn't say which train type runs.
+
+Reply with A, B or C (plus the reason if C). Until then I'll build with A as the default and make the rule easy to change.
+
+## 3. In-person check: Houten and Houten Castellum *(before launch, not blocking)*
 
 The data says both are fully step-free, each with **one lift** serving the island platform (tracks 1 and 2). Please check that this is true.
 
@@ -25,7 +44,7 @@ For **each station**:
 
 Put the answers under this item or send them in chat. Quick notes are fine.
 
-## 3. Optional: desk check of 3 doubtful stations
+## 4. Optional: desk check of 3 doubtful stations
 
 The data calls these step-free, but another source says no and nothing in the lift/ramp register supports "yes". Until checked, they are **unknown** (not step-free), so doing nothing is safe. If you ever pass one, a look would settle it:
 
@@ -33,7 +52,7 @@ The data calls these step-free, but another source says no and nothing in the li
 - **Rotterdam Stadion**: event-only station; is there a step-free route?
 - **Diemen Zuid**: is the lift to the train platform in service (the register says "project")?
 
-## 4. Optional: NS API key *(useful in Phase 1, not needed for accessibility)*
+## 5. Optional: NS API key *(useful in Phase 1, not needed for accessibility)*
 
 Used to compare our travel times with NS's journey planner for about 20 test pairs.
 
@@ -44,11 +63,11 @@ Used to compare our travel times with NS's journey planner for about 20 test pai
    `NS_API_KEY=<paste key here>`
 5. Tell me it's there. **Don't paste the key in chat.**
 
-## 5. Decide (optional): report data errors to DOVA?
+## 6. Decide (optional): report data errors to DOVA?
 
 I found a few anomalies in the official data, for example Blerick, where two tracks on the same island platform disagree. Eindhoven Strijp-S and Rotterdam Stadion are also doubtful. Reporting them helps everyone who uses this data (the NS app, 9292…). If you want that, I'll draft a short email for you to send.
 
-## 6. Housekeeping from setup
+## 7. Housekeeping from setup
 
 - **Stop Nextcloud from syncing `.git`.** In the Nextcloud desktop client: *Settings → Edit Ignored Files*, then add `.git`. Syncing the repository's internal files can corrupt it.
 - **The GitHub repo is public**, and commit author emails are visible. Fine as is; if you'd rather use GitHub's no-reply address, send it to me and I'll switch.

@@ -28,8 +28,11 @@ Recommendation: **Go**. See the verdict in [audit/REPORT.md](../audit/REPORT.md)
      - NS code as the key.
      - EPIAP per-track status: GTFS `platform_code` matches an EPIAP quay 98.7% of the time.
      - Apply `recommended_status` overrides.
-     - Treat the rail-replacement bus stops that sit in GTFS rail routes (e.g. "[Bodegraven] OV halte…") as not rail.
+     - Filter out NS's **"Drempelvrije bus"** routes (20 of them). GTFS files them as route_type 2 (rail), but they're buses, with stops like "[Bodegraven] OV halte…".
    - Log the +3 min transfer buffer in DECISIONS.md.
+   - **Stroller profile must be possible by Sprinter.** Daan added this to PLAN.md; the exact rule is NEEDS_DAAN item 2.
+     - Default until he answers: NS Sprinter + all regional operators' trains; no NS Intercity / Intercity direct / international.
+     - Make the rule a config list, keyed on GTFS `route_short_name` category + agency.
 2. Items waiting on Daan: see [NEEDS_DAAN.md](NEEDS_DAAN.md).
    - In-person Houten / Houten Castellum.
    - Optional NS API key.
