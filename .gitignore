@@ -1,0 +1,37 @@
+# Secrets — never commit keys
+.env
+.env.*
+!.env.example
+
+# Data: raw downloads are cached locally only; data/build/ is committed
+data/raw/
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+*.egg-info/
+
+# Node / Vite
+node_modules/
+web/dist/
+.vite/
+
+# Editors / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Nextcloud sync artefacts
+.sync_*.db*
+.owncloudsync.log*
+*.nextcloud-conflict*
+*(conflicted copy*
+
+# Claude Code local settings
+.claude/settings.local.json
