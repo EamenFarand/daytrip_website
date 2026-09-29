@@ -3,42 +3,37 @@
 *Last updated: 2026-09-29 (end of session 1)*
 
 ## Where we are
-**Phase 0 (data audit) is done. Waiting for Daan's go/no-go** ([NEEDS_DAAN](NEEDS_DAAN.md) item 1).
-Recommendation: **Go**. See the verdict in [audit/REPORT.md](../audit/REPORT.md).
+**Phase 1 (router and precompute) is done. Waiting for Daan's review and go for Phase 2** ([NEEDS_DAAN](NEEDS_DAAN.md) item 1).
+The only open Phase 1 item is comparing ~20 routes with the NS journey planner. The code is ready, but it's waiting for the NS API key (NEEDS_DAAN item 4).
 
 ## Done
-- Git repo set up and pushed to https://github.com/EamenFarand/daytrip_website (`main`).
-- Phase 0 audit in `audit/`:
-  - `REPORT.md`: answers to Q1–Q7, source strategy and verdict.
-  - `stations.csv`: 396 Dutch rail stations with IDs and each source's status.
-  - Reproducible scripts: `uv run python run_all.py`. Tests: `uv run pytest` (4 passing).
-- Key findings:
-  - DOVA NeTEx EPIAP (daily, CC0) gives per-track step-free status for 395/396 stations.
-  - GTFS `wheelchair_boarding` is unusable for step-free (it's NS's level-boarding flag).
-  - Live lift status comes via SIRI-FM on NDOV's ZeroMQ stream. It is push-only, with a full snapshot once a day.
+- **Phase 0**: data audit, verdict Go. See `audit/REPORT.md`.
+- **Phase 1**, in `pipeline/` (see `pipeline/README.md`):
+  - `uv run python -m stepfree.build` builds `meta.json`, `stations.json` and 395 `origins/<CODE>.json`. It takes about 2.5 min on 4 cores; output is 34 MB (about 10 KB compressed per origin).
+  - Router: platform-level range RAPTOR, with the stroller profile enforced during the search, both train sets (all / sprinter), weekday Wed 21 Oct and Saturday 24 Oct, 08:30–12:00, 0/1/2 changes.
+  - The build → validate → swap step blocks broken output: structural checks, invariants (pram never faster, sprinter never faster, more changes never slower) and known answers.
+  - Tests: `uv run pytest`, 46 passing and 1 skipped (NS API). They include hand-made networks proving the stroller route avoids a transfer station without step-free access, and the same proof on real data (Houten Castellum → Amersfoort with Utrecht C blocked).
+  - Corrections file `pipeline/overrides/stations.csv`: Houten and Houten Castellum verified by Daan in person, plus the audit's conservative corrections.
+- Housekeeping: the download cache and build output moved outside Nextcloud via `.env` (`STEPFREE_CACHE`, `STEPFREE_BUILD`). `data/build/` is git-ignored; CI will deploy it in Phase 3.
 
 ## In progress
-- `audit/lift_listener.py` is logging the live lift feed to `data/raw/lifts/` for 72 h (started 29 Sep 21:12 CEST, stops about 2 Oct 21:12, or earlier if the PC sleeps).
-  - **Next session:** analyse the logs. When does the daily full snapshot arrive? How many lifts are out? Then add the numbers to REPORT.md Q5.
-  - Not blocking Phase 1.
+- `audit/lift_listener.py` is logging the live lift feed to `data/raw/lifts/` until about 2 Oct 21:12.
+  - Next session: analyse it. When does the daily full snapshot arrive, and how many lifts are out? Add the answers to `audit/REPORT.md` Q5.
+  - Then move `data/raw/lifts` to the cache folder too.
 
 ## Next step
-1. When Daan says go: start **Phase 1** (router + precompute) in `pipeline/`, as a new uv project on Python 3.12.
-   - Reuse the audit's findings:
-     - NS code as the key.
-     - EPIAP per-track status: GTFS `platform_code` matches an EPIAP quay 98.7% of the time.
-     - Apply `recommended_status` overrides.
-     - Filter out NS's **"Drempelvrije bus"** routes (20 of them). GTFS files them as route_type 2 (rail), but they're buses, with stops like "[Bodegraven] OV halte…".
-   - Log the +3 min transfer buffer in DECISIONS.md.
-   - **Sprinter-only routes.** Daan added this to PLAN.md (Phase 1), plus a "sprinter / intercity" filter (Phase 2).
-     - Precompute both variants ("sprinter only" and "all trains"); watch the output size.
-     - What counts as a sprinter is NEEDS_DAAN item 2. Default until he answers: NS Sprinter + all regional operators' trains; no NS Intercity / Intercity direct / international.
-     - Make the rule a config list, keyed on GTFS `route_short_name` category + agency.
-2. Items waiting on Daan: see [NEEDS_DAAN.md](NEEDS_DAAN.md).
-   - In-person Houten / Houten Castellum.
-   - Optional NS API key.
-   - Nextcloud `.git` ignore.
+1. When the NS API key arrives: `cd pipeline && uv run python -m stepfree.ns_check`. Investigate any route off by more than 5 min.
+2. When Daan says go: **Phase 2**, the map frontend in `web/` (Vite + TypeScript + MapLibre).
+   - It reads `stations.json` and `origins/<CODE>.json`; the format is in `pipeline/README.md`.
+   - The sprinter/intercity filter maps to `train_set`, the profile to `stroller`/`any`, the day to `weekday`/`saturday`.
+   - "Unknown" and "not step-free" stations must look different from "no journey", and never by colour alone.
+3. Waiting on Daan (see NEEDS_DAAN):
+   - Den Haag C 11–12 / Groningen 2–3 check;
+   - NS API key;
+   - Nextcloud `.git` ignore;
+   - optional DOVA report.
 
 ## How to resume
-- Read `CLAUDE.md`, this file, `docs/PLAN.md`, then `audit/REPORT.md`.
-- `cd audit && uv sync && uv run python run_all.py` rebuilds everything. Downloads are cached in `data/raw/`.
+- Read `CLAUDE.md`, this file, `docs/PLAN.md`, `docs/DECISIONS.md` (newest first), then `pipeline/README.md`.
+- `cd pipeline && uv sync && uv run pytest && uv run python -m stepfree.build`. Downloads are cached; paths come from `.env`.
+- If `.env` is missing (fresh checkout), everything goes to `data/raw` and `data/build`, which is fine outside Nextcloud.

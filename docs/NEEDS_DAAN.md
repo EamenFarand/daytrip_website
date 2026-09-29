@@ -1,51 +1,39 @@
 # Needs Daan
 
-Everything that needs you, batched. Newest on top. Tick items off or delete them when done.
+Everything that needs you, batched. Open items first; answered items are kept at the bottom as a record.
 
 ---
 
-## 1. Decide: go / no-go on Phase 0 *(blocks Phase 1)*
+## Open
 
-Read the verdict at the top of [audit/REPORT.md](../audit/REPORT.md) (a 2-minute read).
-My recommendation is **Go**: open data gives a step-free status for 99% of stations, refreshed daily, CC0.
-Reply "go", "go, narrowed" or "rethink", plus anything you want changed in the plan.
+### 1. Review Phase 1, then go / no-go for Phase 2 *(blocks Phase 2)*
 
-## 2. Decide: what counts as a "sprinter" for the stroller profile? *(needed early in Phase 1)*
+The router and precompute are done; see [STATUS.md](STATUS.md) and [pipeline/README.md](../pipeline/README.md).
+The questions for you:
 
-You added to PLAN.md: *"Each route must be possible to ride with a 'sprinter' train, as the stroller is inconvenient with the intercity."* You also added a **sprinter / intercity filter** in Phase 2. I read that as: Phase 1 precomputes both "sprinter only" and "all trains", and the user picks. Correct me if you meant sprinter-only to be fixed for the stroller profile.
+- **Results.** Does what's in the summary match your own trips? For example:
+  - Houten Castellum → Utrecht C: 13 min, 4× an hour, direct.
+  - Utrecht → Amsterdam C with a pram on Sprinters only: 42 min direct but only until 09:38, otherwise 54 min with a change.
+- **Journey rules.** I compare journeys *within* 08:30–12:00, and "typical" means the median of the sensible journeys. See DECISIONS.md.
 
-Either way I need to know which trains count as "sprinter". The timetable labels trains like this:
+Reply "go" for Phase 2 (map frontend), or tell me what to change.
 
-| Operator | Labels in the data |
-|---|---|
-| NS | Sprinter (63 routes), Intercity (39), Intercity direct (4) |
-| Arriva, Blauwnet, RRReis, Qbuzz (R-net), Keolis | Stoptrein, Sneltrein, Sprinter, and one "Intercity" (Keolis, Zwolle–Enschede) |
-| International | ICE, Eurostar, EuroCity, Nightjet, European Sleeper, GoVolta |
+### 2. Check: Den Haag Centraal tracks 11–12 and Groningen tracks 2–3 *(high value, not blocking)*
+
+The official data has **no step-free status** for these busy tracks, so the pram profile won't use them (unknown = not step-free). That's safe but costly:
+
+- **Den Haag Centraal 11–12**: about 130 Sprinters a day (e.g. from Leiden). With a pram, Leiden → Den Haag C by Sprinter now shows a big detour instead of the direct 18 min.
+- **Groningen 2–3**: about 270 regional trains a day. The data does list a lift for 2–3 (`GN-LIF-004`), but not whether the route to the street is step-free.
 
 Options:
 
-- **A. (my recommendation)** Allow **NS Sprinter + every regional train** (all Arriva / Keolis / Qbuzz / RRReis / Blauwnet services, whatever their label). These are nearly all low-floor trains with room for a pram. Exclude NS Intercity, Intercity direct and international trains.
-- **B.** NS Sprinter and regional *Stoptrein* only (also exclude regional *Sneltrein* and Keolis *Intercity*).
-- **C.** Something else. Tell me what bothers you about intercities (the steps into double-deckers? crowding? no room?). It changes the rule. For example, NS's newer single-deck intercities (ICNG) have level boarding, but the timetable doesn't say which train type runs.
+- **(a) Check in person** when you're there. Den Haag is 40 min from Utrecht; Groningen is far. For each: can you get from the street to that platform without stairs, and back? Is there a lift (note its code)?
+- **(b) Accept the station-level evidence** (both stations are mostly step-free, and Groningen has a lift to 2–3) and I add a correction marked "desk check". This is less certain; it's your call.
+- **(c) Leave as is** until the official data fills the gap.
 
-Reply with A, B or C (plus the reason if C). Until then I'll build with A as the default and make the rule easy to change.
+My suggestion: (a) for Den Haag, (c) for Groningen, and report both via item 5.
 
-## 3. In-person check: Houten and Houten Castellum *(before launch, not blocking)*
-
-The data says both are fully step-free, each with **one lift** serving the island platform (tracks 1 and 2). Please check that this is true.
-
-For **each station**:
-
-1. Walk from each street entrance to the platform **without using stairs or escalators**. Note the route: lift, ramp or level.
-2. Find the lift and write down the code on its sticker or panel. Expected: `HTN-LIF-001` (Houten) and `HTNC-LIF-001` (Houten Castellum). Does it work?
-3. Is there any other lift, ramp or level route we don't know about? (The data has 1 lift and 0 ramps at each.)
-4. Ramp steepness, if any: fine with a pram / hard work / too steep.
-5. Anything else a parent with a pram would trip over: long detours, a gap or step into the train, narrow gates.
-6. Optional: 2–3 photos of the route (lift door with the code, platform).
-
-Put the answers under this item or send them in chat. Quick notes are fine.
-
-## 4. Optional: desk check of 3 doubtful stations
+### 3. Optional: desk check of 3 doubtful stations
 
 The data calls these step-free, but another source says no and nothing in the lift/ramp register supports "yes". Until checked, they are **unknown** (not step-free), so doing nothing is safe. If you ever pass one, a look would settle it:
 
@@ -53,23 +41,36 @@ The data calls these step-free, but another source says no and nothing in the li
 - **Rotterdam Stadion**: event-only station; is there a step-free route?
 - **Diemen Zuid**: is the lift to the train platform in service (the register says "project")?
 
-## 5. Optional: NS API key *(useful in Phase 1, not needed for accessibility)*
+### 4. NS API key: waiting for NS's approval
 
-Used to compare our travel times with NS's journey planner for about 20 test pairs.
+You requested the travel information API ("Reisinformatie API"); that's the right one. When approved:
 
-1. Go to <https://apiportal.ns.nl/> and create an account (free).
-2. Go to **Products**, open **Ns-App**, and click **Subscribe**.
-3. Open your **Profile** and copy the **Primary key**.
-4. In the project folder, create a file named `.env` (git ignores it) containing one line:
-   `NS_API_KEY=<paste key here>`
-5. Tell me it's there. **Don't paste the key in chat.**
+1. Copy the **Primary key** from your profile on <https://apiportal.ns.nl/>.
+2. Open the file `.env` in the project folder. It already exists; I created it for the cache settings.
+3. Replace the line `# NS_API_KEY=   <- add your ...` with `NS_API_KEY=<your key>`, with no `#` in front.
+4. Tell me it's there. **Don't paste the key in chat.** I'll then run the comparison of ~20 routes against the NS journey planner.
 
-## 6. Decide (optional): report data errors to DOVA?
+### 5. Decide (optional): report data errors to DOVA?
 
-I found a few anomalies in the official data, for example Blerick, where two tracks on the same island platform disagree. Eindhoven Strijp-S and Rotterdam Stadion are also doubtful. Reporting them helps everyone who uses this data (the NS app, 9292…). If you want that, I'll draft a short email for you to send.
+Anomalies found so far:
+- Blerick: two tracks on one island platform disagree.
+- Den Haag C 11–12 and Groningen 2–3: no status.
+- Eindhoven Strijp-S and Rotterdam Stadion: doubtful.
+- Delft Campus and Santpoort Noord: platforms numbered differently from the timetable.
 
-## 7. Housekeeping from setup
+Reporting them helps everyone who uses this data (the NS app, 9292…). If you want that, I'll draft a short email for you to send.
 
-- **Stop Nextcloud from syncing `.git`.** In the Nextcloud desktop client: *Settings → Edit Ignored Files*, then add `.git`. Syncing the repository's internal files can corrupt it.
+### 6. Housekeeping
+
+- **Stop Nextcloud from syncing `.git`.** In the Nextcloud desktop client: *Settings → Edit Ignored Files*, then add `.git`. Downloads and build output now live outside Nextcloud (`AppData\Local\stepfree-nl`), so only the code syncs.
 - **The GitHub repo is public**, and commit author emails are visible. Fine as is; if you'd rather use GitHub's no-reply address, send it to me and I'll switch.
-- **The lift-status logger** (`audit/lift_listener.py`) runs on your PC until about **2 Oct 21:12**. It just stops if the PC sleeps or restarts, no harm done. Nothing to do.
+- **The lift-status logger** runs on your PC until about **2 Oct 21:12**. It just stops if the PC sleeps or restarts, no harm done.
+
+---
+
+## Answered
+
+- **2026-09-29, Phase 0 go/no-go:** Go.
+- **2026-09-29, what counts as a sprinter:** option A, NS Sprinters plus every regional train. Reason: *any train taken must avoid steps inside the train*; IC trains have steps. Logged in DECISIONS.md.
+- **2026-09-29, Houten and Houten Castellum in person:** both *accessible pain-free with a pram*. Recorded in `pipeline/overrides/stations.csv` as verified.
+- **2026-09-29, NS API:** requested the Reisinformatie API; waiting for approval (item 4).

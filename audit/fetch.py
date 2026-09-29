@@ -8,13 +8,28 @@ re-download unchanged files. Cached files live in data/raw/ (git-ignored).
 from __future__ import annotations
 
 import json
+import os
 import time
 from pathlib import Path
 
 import requests
 
 ROOT = Path(__file__).resolve().parent.parent
-RAW = ROOT / "data" / "raw"
+
+
+def _cache_dir() -> Path:
+    """STEPFREE_CACHE from the environment or .env, else data/raw (as in CI)."""
+    value = os.environ.get("STEPFREE_CACHE")
+    env_file = ROOT / ".env"
+    if not value and env_file.exists():
+        for line in env_file.read_text(encoding="utf-8").splitlines():
+            key, _, val = line.partition("=")
+            if key.strip() == "STEPFREE_CACHE" and val.strip():
+                value = val.strip()
+    return Path(value) if value else ROOT / "data" / "raw"
+
+
+RAW = _cache_dir()
 USER_AGENT = "stepfree-nl-audit/0.1 (+https://github.com/EamenFarand/daytrip_website)"
 MIN_INTERVAL_S = 1.0  # at most one request per second to any source
 

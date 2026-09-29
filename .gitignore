@@ -3,8 +3,11 @@
 .env.*
 !.env.example
 
-# Data: raw downloads are cached locally only; data/build/ is committed
+# Data: downloads and build output are generated, never committed
+# (CI builds and deploys data/build itself; see docs/DECISIONS.md)
 data/raw/
+data/build/
+data/build.tmp/
 
 # Python
 __pycache__/

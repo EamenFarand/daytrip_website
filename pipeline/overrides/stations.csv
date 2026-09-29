@@ -1,0 +1,7 @@
+ns_code,track,status,reason,source,date
+HTN,,yes,Confirmed step-free with a pram,in person (Daan),2026-09-29
+HTNC,,yes,Confirmed step-free with a pram,in person (Daan),2026-09-29
+EHS,,unknown,"Other sources say not step-free (ProRail 2020, OSM) and no lift or ramp is registered in EPIAP or ProRail's asset register",Phase 0 audit,2026-09-29
+RTST,,unknown,"ProRail 2020 says not step-free and no lift or ramp is registered in EPIAP or ProRail's asset register (event station)",Phase 0 audit,2026-09-29
+DMNZ,,unknown,OSM says not step-free and ProRail's asset register lists the lift as a project (not in service),Phase 0 audit,2026-09-29
+BR,2,unknown,"Shares island platform 2/3 with track 3, which EPIAP marks not step-free; the two can't both be right",Phase 0 audit,2026-09-29
