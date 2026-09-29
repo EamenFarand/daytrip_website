@@ -5,3 +5,5 @@ EHS,,unknown,"Other sources say not step-free (ProRail 2020, OSM) and no lift or
 RTST,,unknown,"ProRail 2020 says not step-free and no lift or ramp is registered in EPIAP or ProRail's asset register (event station)",Phase 0 audit,2026-09-29
 DMNZ,,unknown,OSM says not step-free and ProRail's asset register lists the lift as a project (not in service),Phase 0 audit,2026-09-29
 BR,2,unknown,"Shares island platform 2/3 with track 3, which EPIAP marks not step-free; the two can't both be right",Phase 0 audit,2026-09-29
+GVC,,yes,"All tracks step-free, including 11 and 12 (EPIAP has no status for those)",in person (Daan knows the station),2026-09-29
+GN,,yes,"All tracks step-free, including 2 and 3 (EPIAP has no status for those)",in person (Daan knows the station),2026-09-29
