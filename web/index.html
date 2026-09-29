@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="nl">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <meta
+      name="description"
+      content="Kies een treinstation en zie waar je met de kinderwagen zonder trappen naartoe kunt: reistijd, overstappen en toegankelijkheid per station."
+    />
+    <title>Stepfree NL – waar kun je heen met de kinderwagen?</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <a class="skip" href="#results">Naar de lijst met stations</a>
+
+    <header class="top">
+      <div>
+        <h1>Stepfree NL <span class="working">werktitel</span></h1>
+        <p class="tagline">Waar kun je met de trein heen zonder trappen? Kies je vertrekstation.</p>
+      </div>
+      <button type="button" class="link-button" id="about-open">Over deze kaart</button>
+    </header>
+
+    <main class="layout">
+      <section class="controls" aria-label="Vertrekstation en keuzes">
+        <div class="search">
+          <label for="origin" class="field-label">Vertrekstation</label>
+          <div class="combo">
+            <input id="origin" type="text" autocomplete="off" spellcheck="false" placeholder="Bijvoorbeeld Utrecht CS of Houten" />
+            <ul id="origin-list" class="combo-list" hidden></ul>
+          </div>
+          <p id="origin-status" class="visually-hidden" role="status" aria-live="polite"></p>
+        </div>
+
+        <details id="filters-box" class="filters-box">
+          <summary><span>Keuzes:</span> <span id="filters-summary" class="filters-summary"></span></summary>
+        <form id="filters" class="filters">
+          <fieldset>
+            <legend>Je reist</legend>
+            <div class="segments">
+              <label><input type="radio" name="profile" value="stroller" /><span>Met kinderwagen</span></label>
+              <label><input type="radio" name="profile" value="any" /><span>Zonder beperking</span></label>
+              <label class="soon"><input type="radio" name="profile" value="wheelchair" disabled /><span>Rolstoel <small>(komt later)</small></span></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Treinen</legend>
+            <div class="segments">
+              <label><input type="radio" name="trains" value="sprinter" /><span>Sprinters en stoptreinen</span></label>
+              <label><input type="radio" name="trains" value="all" /><span>Ook intercity's</span></label>
+            </div>
+            <p class="hint">Sprinters en stoptreinen hebben geen trapjes in de trein.</p>
+          </fieldset>
+          <fieldset>
+            <legend>Dag</legend>
+            <div class="segments">
+              <label><input type="radio" name="day" value="weekday" /><span>Doordeweeks</span></label>
+              <label><input type="radio" name="day" value="saturday" /><span>Zaterdag</span></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Hoogstens overstappen</legend>
+            <div class="segments">
+              <label><input type="radio" name="changes" value="0" /><span>Geen</span></label>
+              <label><input type="radio" name="changes" value="1" /><span>1</span></label>
+              <label><input type="radio" name="changes" value="2" /><span>2</span></label>
+            </div>
+          </fieldset>
+          <div class="range">
+            <label for="max-time" class="field-label">Maximale reistijd: <output id="max-time-out" for="max-time"></output></label>
+            <input id="max-time" type="range" min="0" step="1" />
+          </div>
+        </form>
+        </details>
+      </section>
+
+      <div class="status-area">
+        <p id="summary" class="summary" role="status" aria-live="polite">Bezig met laden…</p>
+        <p class="disclaimer">
+          <strong>Let op:</strong> dit is een hulpmiddel om ideeën op te doen, geen reisplanner. Controleer je reis altijd vooraf in de
+          <a href="https://www.ns.nl/reisplanner" target="_blank" rel="noopener">NS-reisplanner</a>; ook een lift kan storing hebben. Reis je met een rolstoel? Vraag
+          <a href="https://www.ns.nl/reizen/reizen-met-een-beperking/ns-reisassistentie" target="_blank" rel="noopener">NS Reisassistentie</a> aan.
+        </p>
+      </div>
+
+      <section class="map-wrap" aria-label="Kaart">
+        <p class="visually-hidden">De kaart toont dezelfde stations als de lijst.</p>
+        <div id="map" class="map"></div>
+        <p id="map-fallback" class="map-fallback" hidden>De kaart is nu niet beschikbaar. De lijst werkt wel.</p>
+        <div id="legend" class="legend" role="group" aria-label="Legenda"></div>
+      </section>
+
+      <section id="results" class="list" aria-labelledby="results-heading" tabindex="-1"></section>
+    </main>
+
+    <footer class="foot">
+      <p id="data-dates"></p>
+      <p>
+        Bronnen: dienstregeling van OVapi / Stichting OpenGeo; toegankelijkheid van stations van DOVA en ProRail via NDOV Loket (CC0); overstaptijden van NS via
+        NDOV Loket (CC0). Kaart: OpenFreeMap, © OpenMapTiles, © OpenStreetMap-bijdragers.
+      </p>
+      <p>Geen cookies, geen tracking. Niet verbonden aan NS of ProRail.</p>
+    </footer>
+
+    <dialog id="station" class="panel" aria-labelledby="station-title">
+      <div class="panel-head">
+        <h2 id="station-title"></h2>
+        <button type="button" class="close" data-close aria-label="Sluiten">✕</button>
+      </div>
+      <div id="station-body" class="panel-body"></div>
+    </dialog>
+
+    <dialog id="about" class="panel" aria-labelledby="about-title">
+      <div class="panel-head">
+        <h2 id="about-title">Over deze kaart</h2>
+        <button type="button" class="close" data-close aria-label="Sluiten">✕</button>
+      </div>
+      <div class="panel-body prose">
+        <p>
+          Met een kinderwagen is de vraag niet alleen óf je ergens kunt komen, maar ook of dat lukt zonder trappen. Deze kaart laat zien welke stations je vanaf
+          jouw station kunt bereiken, hoe lang dat duurt en hoe vaak er een trein gaat.
+        </p>
+        <h3>Hoe werkt het?</h3>
+        <ul>
+          <li>We rekenen met de dienstregeling van een gewone doordeweekse dag en een zaterdag, voor vertrek tussen 08:30 en 12:00.</li>
+          <li>Met kinderwagen: je stapt alleen in, uit en over op perrons die zonder trappen bereikbaar zijn. Overstappen op hetzelfde perron mag altijd. Per overstap rekenen we 3 minuten extra.</li>
+          <li>Is van een station of perron niet bekend of het drempelvrij is, dan tellen we het niet mee.</li>
+          <li>"Sprinters en stoptreinen": treinen zonder trapjes in de trein. Intercity's hebben die vaak wel.</li>
+        </ul>
+        <h3>Wat we (nog) niet weten</h3>
+        <ul>
+          <li>Hoe steil een hellingbaan is en hoe lang de looproute is.</li>
+          <li>Actuele liftstoringen: die tonen we binnenkort.</li>
+          <li>Of je zonder opstapje de trein in kunt: dat hangt ook af van het treintype.</li>
+        </ul>
+        <h3>Bronnen</h3>
+        <p>
+          Toegankelijkheid van stations: DOVA en ProRail, via NDOV Loket (open data, CC0), dagelijks bijgewerkt. Dienstregeling: OVapi / Stichting OpenGeo.
+          Overstaptijden: NS via NDOV Loket. Kaart: OpenFreeMap en OpenStreetMap. Deze site is niet verbonden aan NS of ProRail.
+        </p>
+        <h3>Fout gezien?</h3>
+        <p>Een meldadres komt eraan. Tot die tijd: controleer altijd de NS-reisplanner.</p>
+      </div>
+    </dialog>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

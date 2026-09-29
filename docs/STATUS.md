@@ -3,8 +3,42 @@
 *Last updated: 2026-09-29 (end of session 1)*
 
 ## Where we are
-**Phase 1 (router and precompute) is done. Waiting for Daan's review and go for Phase 2** ([NEEDS_DAAN](NEEDS_DAAN.md) item 1).
-The only open Phase 1 item is comparing ~20 routes with the NS journey planner. The code is ready, but it's waiting for the NS API key (NEEDS_DAAN item 4).
+**Phase 2 (map frontend) is mostly built and working, but not yet reviewed or documented.** Session 1 ended at the usage limit mid-phase.
+Phase 1 is done; Daan gave the go for Phase 2 and confirmed Den Haag C and Groningen are fully step-free (now in the corrections file).
+
+### Phase 2: done so far (`web/`)
+- Vite + TypeScript + MapLibre 6. Run: `npm --prefix web run dev` (or the "web" entry in `.claude/launch.json`).
+  Data is served from `STEPFREE_BUILD` (`.env`). The built site goes to `STEPFREE_SITE`: `npm --prefix web run build:site`.
+- Station search that tolerates typos and abbreviations ("Utrecht CS", "A'dam", "Den Bosch", station codes).
+- Filters: profile (wheelchair shown as "komt later"), trains, day, max changes, max time. Folded on phones.
+- Map (OpenFreeMap tiles): stations coloured by travel time; other states shown by shape; legend.
+- List view as the accessible equivalent of the map, sorted by time.
+- Station panel: status with source and date, journey, lifts, NS links. `/station/<code>` works.
+- State is kept in the URL hash (shareable); no cookies or storage.
+- The map is lazy-loaded: the page is 22 KB of JS, the map about 280 KB compressed, loaded after.
+- Checks passed:
+  - axe-core: 0 violations in light, dark and phone layouts;
+  - `npx vitest run`: 34 tests;
+  - the production build was tested in `vite preview`.
+- Spot check against the NS planner website (reference only) for 4 routes: all match.
+
+### Phase 2: left to do
+1. `docs/DECISIONS.md` entries for:
+   - OpenFreeMap tiles (no SLA; the list works without the map);
+   - blue ordinal ramp in 5 bands (validated);
+   - shapes for the other states;
+   - URL-only state;
+   - defaults: pram + sprinters + 1 change + 2 h;
+   - lazy map;
+   - `STEPFREE_SITE`;
+   - "werktitel" Stepfree NL.
+2. `web/README.md`; commit anything not yet committed.
+3. NEEDS_DAAN:
+   - product name + domain (Phase 3);
+   - a contact email for error reports (the about page says "komt eraan");
+   - review of the site (screenshots or run it locally).
+4. Lighthouse accessibility score (the v1 goal is ≥ 95), e.g. `npx lighthouse` against the preview.
+5. Then stop and summarise Phase 2 for Daan.
 
 ## Done
 - **Phase 0**: data audit, verdict Go. See `audit/REPORT.md`.

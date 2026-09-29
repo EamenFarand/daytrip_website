@@ -77,12 +77,18 @@ def main(argv: list[str] | None = None) -> None:
     shutil.rmtree(tmp, ignore_errors=True)
     (tmp / "origins").mkdir(parents=True)
 
+    trains_per_day = dict(timetables["weekday"].stop_times.group_by("station").len().iter_rows())
+    iff_names = dict(zip(iff["code"], iff["iff_name"]))
     station_rows = []
     for row in coords.iter_rows(named=True):
         st = stations.get(row["code"])
+        name = st.name if st else row["name"]
+        aliases = sorted({n for n in (row["name"], iff_names.get(row["code"])) if n and n != name})
         station_rows.append({
             "code": row["code"],
-            "name": st.name if st else row["name"],
+            "name": name,
+            "aliases": aliases,
+            "trains": trains_per_day.get(row["code"], 0),
             "lat": round(row["lat"], 5),
             "lon": round(row["lon"], 5),
             "status": st.status if st else "unknown",
