@@ -37,7 +37,7 @@ Verify current URLs, formats, licences and access requirements yourself; don't t
 
 ## Phase 1 — Router and precompute
 - Rail-only network from GTFS, all operators. No bus/tram/metro legs in v1.
-- Two profiles: `any` (baseline) and `stroller`. In `stroller`, the origin, every transfer station and the destination must be step-free. The router must **avoid** non-step-free transfer stations during search — not filter results afterwards. Unknown = not step-free.
+- Two profiles: `any` (baseline) and `stroller`. In `stroller`, the origin, every transfer station and the destination must be step-free. Each route must be possible to ride with a 'sprinter' train, as the stroller is inconvenient with the intercity. The router must **avoid** non-step-free transfer stations during search — not filter results afterwards. Unknown = not step-free.
 - Transfer buffer in `stroller` mode: start at +3 minutes on top of the GTFS/default minimum transfer time; log the choice in DECISIONS.md.
 - Service days: one representative weekday and one Saturday from the current feed. Departure window 08:30–12:00 (day trips).
 - Algorithm: RAPTOR or similar, run for every origin.
