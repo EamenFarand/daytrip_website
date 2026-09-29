@@ -30,8 +30,9 @@ Recommendation: **Go**. See the verdict in [audit/REPORT.md](../audit/REPORT.md)
      - Apply `recommended_status` overrides.
      - Filter out NS's **"Drempelvrije bus"** routes (20 of them). GTFS files them as route_type 2 (rail), but they're buses, with stops like "[Bodegraven] OV halte…".
    - Log the +3 min transfer buffer in DECISIONS.md.
-   - **Stroller profile must be possible by Sprinter.** Daan added this to PLAN.md; the exact rule is NEEDS_DAAN item 2.
-     - Default until he answers: NS Sprinter + all regional operators' trains; no NS Intercity / Intercity direct / international.
+   - **Sprinter-only routes.** Daan added this to PLAN.md (Phase 1), plus a "sprinter / intercity" filter (Phase 2).
+     - Precompute both variants ("sprinter only" and "all trains"); watch the output size.
+     - What counts as a sprinter is NEEDS_DAAN item 2. Default until he answers: NS Sprinter + all regional operators' trains; no NS Intercity / Intercity direct / international.
      - Make the rule a config list, keyed on GTFS `route_short_name` category + agency.
 2. Items waiting on Daan: see [NEEDS_DAAN.md](NEEDS_DAAN.md).
    - In-person Houten / Houten Castellum.

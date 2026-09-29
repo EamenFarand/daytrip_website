@@ -12,8 +12,9 @@ Reply "go", "go, narrowed" or "rethink", plus anything you want changed in the p
 
 ## 2. Decide: what counts as a "sprinter" for the stroller profile? *(needed early in Phase 1)*
 
-You added to PLAN.md: *"Each route must be possible to ride with a 'sprinter' train, as the stroller is inconvenient with the intercity."*
-The timetable labels trains like this:
+You added to PLAN.md: *"Each route must be possible to ride with a 'sprinter' train, as the stroller is inconvenient with the intercity."* You also added a **sprinter / intercity filter** in Phase 2. I read that as: Phase 1 precomputes both "sprinter only" and "all trains", and the user picks. Correct me if you meant sprinter-only to be fixed for the stroller profile.
+
+Either way I need to know which trains count as "sprinter". The timetable labels trains like this:
 
 | Operator | Labels in the data |
 |---|---|
