@@ -278,11 +278,11 @@ export class StationMap {
     if (this.map && this.ready) this.map.setFilter("st-selected", ["==", ["get", "code"], code ?? ""]);
   }
 
-  focus(lon: number, lat: number): void {
+  /** Bring a point into view if it isn't (e.g. a new origin while zoomed in elsewhere). */
+  reveal(lon: number, lat: number): void {
     if (!this.map) return;
     const still = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const bounds = this.map.getBounds();
-    if (bounds.contains([lon, lat])) return;
+    if (this.map.getBounds().contains([lon, lat])) return;
     if (still) this.map.jumpTo({ center: [lon, lat] });
     else this.map.easeTo({ center: [lon, lat], duration: 600 });
   }

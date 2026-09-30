@@ -9,7 +9,7 @@ import type { StationMap } from "./map";
 import { renderPanel } from "./panel";
 import { originUsable, verdicts } from "./results";
 import { StationSearch } from "./search";
-import { DEFAULTS, MAX_MINUTES, MINUTE_STEPS, fromHash, stationFromPath, toHash, type State } from "./state";
+import { MAX_MINUTES, MINUTE_STEPS, fromHash, stationFromPath, toHash, type State } from "./state";
 import type { LiftStatus, Meta, OriginDoc, Station } from "./types";
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -129,8 +129,11 @@ async function start(): Promise<void> {
     const originChanged = patch.origin !== undefined && patch.origin !== state.origin;
     state = { ...state, ...patch };
     history.replaceState(null, "", `/${toHash(state)}`);
-    if (originChanged) void refresh();
-    else if (Object.keys(patch).every((k) => k === "selected")) renderSelection(); // keep the list (and focus) intact
+    if (originChanged) {
+      const origin = state.origin ? byCode.get(state.origin) : undefined;
+      if (origin) map?.reveal(origin.lon, origin.lat);
+      void refresh();
+    } else if (Object.keys(patch).every((k) => k === "selected")) renderSelection(); // keep the list (and focus) intact
     else render();
   }
 
@@ -149,7 +152,18 @@ async function start(): Promise<void> {
     render();
   }
 
+  // The skip link moves focus without touching the hash, which holds the state.
+  document.querySelector(".skip")?.addEventListener("click", (e) => {
+    e.preventDefault();
+    $("results").focus();
+  });
+
   window.addEventListener("hashchange", () => {
+    if (location.hash && !location.hash.includes("=")) {
+      // an in-page link such as #results, not a new state: put the state back in the URL
+      history.replaceState(null, "", `/${toHash(state)}`);
+      return;
+    }
     const next = fromHash(location.hash, known);
     const originChanged = next.origin !== state.origin;
     state = next;
@@ -167,10 +181,13 @@ async function start(): Promise<void> {
     current = verdicts(stations, usable ? doc : null, state);
     const stroller = state.profile === "stroller";
 
+    const text = describe(origin, usable, current.filter((v) => v.category === "reachable").length);
+    summary.textContent = text;
+    const waiting = !usable || loading || !doc ? text : null; // the list then says why it's empty
+
     map?.update(current, state.selected);
-    renderLegend($("legend"), ramp(), state.maxMinutes, stroller);
-    renderList($("results"), current, { names: byCode, windowText, windowHours: (winEnd - winStart) / 60, ramp: ramp(), onPick: (code) => setState({ selected: code }) }, stroller);
-    summary.textContent = describe(origin, usable, current.filter((v) => v.category === "reachable").length);
+    renderLegend($("legend"), ramp(), { maxMinutes: state.maxMinutes, stroller, waiting: waiting !== null, origin: !!origin });
+    renderList($("results"), current, { names: byCode, windowText, windowHours: (winEnd - winStart) / 60, ramp: ramp(), waiting, onPick: (code) => setState({ selected: code }) }, stroller);
     renderSelection();
   }
 
@@ -203,7 +220,11 @@ async function start(): Promise<void> {
   function describe(origin: Station | undefined, usable: boolean, count: number): string {
     if (!origin) return "Kies een vertrekstation om te zien waar je naartoe kunt.";
     if (!usable) {
-      return `${origin.name} is niet drempelvrij, of dat is onbekend. Met de kinderwagen kun je hier niet instappen. Kies een ander station, of kies "Zonder beperking".`;
+      const why =
+        origin.status === "no"
+          ? `${origin.name} is niet drempelvrij. Met de kinderwagen kun je hier niet vertrekken.`
+          : `Van ${origin.name} weten we niet of het drempelvrij is, dus we rekenen er niet mee.`;
+      return `${why} Kies een ander station, of kies "Zonder beperking".`;
     }
     if (loading) return `Reizen vanaf ${origin.name} worden geladen…`;
     if (!doc) return "De reizen vanaf dit station konden niet worden geladen. Probeer het later opnieuw.";
@@ -219,7 +240,6 @@ async function start(): Promise<void> {
     lifts = l;
     if (l) render();
   });
-  if (!location.hash && !fromPath) state = { ...DEFAULTS };
   await refresh();
 }
 

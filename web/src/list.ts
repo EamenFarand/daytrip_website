@@ -11,6 +11,7 @@ export interface ListContext {
   windowText: string; // "08:30 en 12:00"
   windowHours: number;
   ramp: string[];
+  waiting: string | null; // why there are no results yet (no origin, loading...), or null once they're in
   onPick: (code: string) => void;
 }
 
@@ -78,12 +79,12 @@ export function renderList(container: HTMLElement, verdicts: Verdict[], ctx: Lis
   const parts: HTMLElement[] = [];
   const heading = document.createElement("h2");
   heading.id = "results-heading";
-  heading.textContent = `Bereikbare stations (${reachable.length})`;
+  heading.textContent = ctx.waiting ? "Bereikbare stations" : `Bereikbare stations (${reachable.length})`;
   parts.push(heading);
 
   if (reachable.length === 0) {
     const p = document.createElement("p");
-    p.textContent = "Geen stations binnen je keuzes. Probeer meer overstappen of een langere reistijd.";
+    p.textContent = ctx.waiting ?? "Geen stations binnen je keuzes. Probeer meer overstappen of een langere reistijd.";
     parts.push(p);
   } else {
     let shown = 0;
@@ -116,15 +117,23 @@ export function renderList(container: HTMLElement, verdicts: Verdict[], ctx: Lis
 }
 
 /** Legend: travel-time bands (colour + text) and marker shapes (shape + text). */
-export function renderLegend(container: HTMLElement, ramp: string[], maxMinutes: number, stroller: boolean): void {
+export function renderLegend(
+  container: HTMLElement,
+  ramp: string[],
+  o: { maxMinutes: number; stroller: boolean; waiting: boolean; origin: boolean },
+): void {
   const items: [string, string, string?][] = [];
-  BAND_LABELS.forEach((label, i) => {
-    const lower = [0, 30, 60, 90, 120][i];
-    if (lower < maxMinutes) items.push(["mark mark-reachable", label, ramp[i]]);
-  });
-  items.push(["mark mark-origin", "Vertrekstation"]);
-  items.push(["mark mark-out-of-reach", "Niet bereikbaar binnen je keuzes"]);
-  if (stroller) {
+  if (o.waiting) {
+    items.push(["mark mark-idle", o.stroller ? "Drempelvrij (of deels)" : "Station"]);
+  } else {
+    BAND_LABELS.forEach((label, i) => {
+      const lower = [0, 30, 60, 90, 120][i];
+      if (lower < o.maxMinutes) items.push(["mark mark-reachable", label, ramp[i]]);
+    });
+  }
+  if (o.origin) items.push(["mark mark-origin", "Vertrekstation"]);
+  if (!o.waiting) items.push(["mark mark-out-of-reach", "Niet bereikbaar binnen je keuzes"]);
+  if (o.stroller) {
     items.push(["mark mark-not-step-free", "Niet drempelvrij"]);
     items.push(["mark mark-unknown-access", "Toegankelijkheid onbekend"]);
   }

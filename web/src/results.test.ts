@@ -59,6 +59,11 @@ describe("results", () => {
     expect(byCode({ ...state, origin: null }).A).toBe("idle");
   });
 
+  it("without results (loading, or an origin a pram can't use), nothing is called out of reach", () => {
+    const waiting = Object.fromEntries(verdicts(stations, null, state).map((v) => [v.station.code, v.category]));
+    expect(waiting).toMatchObject({ O: "origin", A: "idle", Z: "idle", X: "not-step-free", Y: "unknown-access" });
+  });
+
   it("an origin without step-free access can't be used with a pram", () => {
     expect(originUsable(st("X", "no"), state)).toBe(false);
     expect(originUsable(st("P", "partial"), state)).toBe(true);

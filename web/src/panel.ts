@@ -22,7 +22,7 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, text?: string, cls?: 
   return e;
 }
 
-function statusBlock(st: Station, ctx: PanelContext): HTMLElement {
+function statusBlock(st: Station): HTMLElement {
   const box = el("section");
   box.setAttribute("aria-labelledby", "panel-access");
   box.append(el("h3", "Toegankelijkheid", "panel-h"));
@@ -141,7 +141,7 @@ function links(st: Station, ctx: PanelContext): HTMLElement {
 export function renderPanel(body: HTMLElement, title: HTMLElement, v: Verdict, ctx: PanelContext): void {
   const st = v.station;
   title.textContent = st.name;
-  const parts: HTMLElement[] = [statusBlock(st, ctx)];
+  const parts: HTMLElement[] = [statusBlock(st)];
   const j = journeyBlock(v, ctx);
   if (j) parts.push(j);
   const lifts = liftBlock(st, ctx);

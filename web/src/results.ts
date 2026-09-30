@@ -4,7 +4,7 @@ import { MAX_MINUTES, type State } from "./state";
 import type { Entry, OriginDoc, Station } from "./types";
 
 export type Category =
-  | "idle" // no origin chosen yet (and, with a pram, the station is step-free)
+  | "idle" // no results to judge by yet: no origin, still loading, or an origin a pram can't use
   | "origin"
   | "reachable" // a journey within the filters
   | "out-of-reach" // no journey within the filters (too long, too many changes, or none at all)
@@ -38,7 +38,7 @@ export function verdicts(stations: Station[], doc: OriginDoc | null, s: State): 
     if (s.profile === "stroller" && (station.status === "no" || station.status === "unknown")) {
       return { station, category: station.status === "no" ? "not-step-free" : "unknown-access", entry: null, band: -1 };
     }
-    if (!s.origin) return { station, category: "idle", entry: null, band: -1 };
+    if (!s.origin || !doc) return { station, category: "idle", entry: null, band: -1 };
     const entry = level(dests[station.code], s.maxChanges);
     const fits = entry !== null && (s.maxMinutes >= MAX_MINUTES || entry[0] <= s.maxMinutes);
     if (!fits) return { station, category: "out-of-reach", entry: null, band: -1 };

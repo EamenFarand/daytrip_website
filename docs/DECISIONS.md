@@ -4,6 +4,89 @@ One entry per non-obvious decision: what, why, and what was rejected. Newest on 
 
 ---
 
+### 2026-09-29 — Missing lift data is never shown as "all lifts working"
+**What:** The frontend reads an optional `lifts.json`. Without it, the station panel says live lift status is coming and to check before travelling. Phase 3 must never write a placeholder file with an empty outage list.
+**Why:** Principle 1: no data must look like no data. An empty list would read as "every lift works".
+
+### 2026-09-29 — Map tiles from OpenFreeMap; the list is the fallback
+**What:** The base map uses OpenFreeMap's vector tiles (style *positron* in light mode, *dark* in dark mode), drawn with MapLibre. The credit is on the map and in the footer.
+**Why:**
+- It's free, with no key, no account and no request limits, and its terms allow use on any site.
+- It sets no cookies. I checked the style, tile and font responses.
+- No key means nothing for Daan to set up and nothing to leak.
+
+**Risk:** there's no SLA. If the tiles fail, the map area shows a note, and the list (which has the same information) keeps working.
+**Rejected:**
+- MapTiler, Stadia, Mapbox: they need an account and a key, and their free tiers have caps that could start costing money.
+- Hosting our own tiles (Protomaps): more moving parts. It's the plan B if OpenFreeMap becomes unreliable.
+
+### 2026-09-29 — Travel time in five blue bands; every other state by shape
+**What:**
+- Reachable stations are circles, coloured by typical travel time: up to 30 min, 31–60, 61–90, 91–120, over 2 hours. It's one blue ramp; the quickest band has the most contrast with the base map (dark in light mode, light in dark mode).
+- Every other state has its own shape:
+  - the origin is a bullseye;
+  - "not reachable within your choices" is a hollow ring;
+  - "not step-free" is a square with a cross;
+  - "unknown" is a diamond with a question mark.
+- The legend and the list say everything in words too.
+
+**Why:**
+- Travel time is ordered, so one hue going from dark to light reads as more or less at a glance. Five bands are few enough to tell apart.
+- Shapes keep "not step-free" and "unknown" readable for colour-blind users and in greyscale (WCAG 1.4.1).
+- Both ramps pass the dataviz palette validator against their base map.
+
+**Rejected:**
+- A continuous gradient: exact values are hard to read off.
+- Traffic-light colours: they imply good and bad, and fail for the most common colour blindness.
+- Hiding unreachable stations: then you can't see what's missing, or why.
+
+### 2026-09-29 — The list is the accessible equivalent of the map
+**What:** Every station on the map is also in a list. Reachable stations come first, sorted by travel time, with duration, changes, frequency and "via". Below them are folded groups for "not step-free or unknown" and "not reachable". Each item opens the same station panel.
+**Why:**
+- A map canvas can't be used with a screen reader, and its markers are small.
+- The list's buttons are at least 44 px tall. WCAG 2.5.8 accepts the small map markers because an equivalent control meets the size.
+- On a phone the list is often the quicker way to browse, and it's the fallback when the tiles fail.
+
+### 2026-09-29 — The visitor's choices live in the URL only
+**What:** The origin, the filters and the open station go in the URL hash with Dutch keys, e.g. `#van=HTNC&overstap=2&max=alles`. Values at their default are left out. Nothing goes in cookies or browser storage.
+**Why:**
+- A view can be shared or bookmarked.
+- There's no cookie banner and nothing to clean up.
+- Using the hash (not a path or query) keeps the static site simple: every state is the same `index.html`.
+
+**Rejected:** remembering the last origin in local storage. Handy, but not needed for v1.
+
+### 2026-09-29 — Defaults: pram, sprinters, at most 1 change, up to 2 hours, weekday
+**What:** A first visit starts with the pram profile, sprinters and stopping trains only, at most one change, up to 2 hours, on a weekday.
+**Why:**
+- v1 is for pram users, and Daan's rule is to avoid steps inside the train.
+- One change and two hours suit a day trip with a small child. The filters widen it.
+
+### 2026-09-29 — The map loads after the page
+**What:** MapLibre (about 1 MB of script, 280 KB compressed) is loaded with a dynamic import once the page is up. The page's own script is 9 KB compressed.
+**Why:**
+- Most users are on a phone, often on a platform. The search and the list answer the question without the map, so they shouldn't wait for it.
+- Lighthouse (phone, slow 4G) measures first content at 0.9 s and the largest element at 1.8 s. What's left is MapLibre starting up: about 0.9 s of busy main thread on a throttled CPU.
+
+### 2026-09-29 — The built site goes outside the repo (`STEPFREE_SITE`)
+**What:** `npm run build:site` writes the site, plus a copy of the data, to `STEPFREE_SITE` from `.env`, or else to `web/dist`. The dev server reads the data straight from `STEPFREE_BUILD`.
+**Why:** The same reason as for the data build: inside Nextcloud, the sync client locks freshly written files. CI uses the default.
+
+### 2026-09-29 — Station search: our own small matcher
+**What:** About 130 lines that:
+- normalise accents and apostrophes;
+- expand shorthand (CS → Centraal, A'dam → Amsterdam, a/d → aan de);
+- allow 1 or 2 typos per word, depending on its length;
+- rank by match quality, then by how busy the station is.
+
+A short list adds names that share no words with the official one (Den Bosch, Bijlmer, Beukenlaan).
+**Why:** 395 names fit in memory. A fuzzy-search library would be bigger than this and wouldn't know Dutch shorthand. Tests cover the typos and abbreviations.
+**Rejected:** Fuse.js and similar libraries: generic scoring, no shorthand.
+
+### 2026-09-29 — Working title "Stepfree NL"
+**What:** The site says "Stepfree NL (werktitel)" until Daan picks a name.
+**Why:** The name is Daan's call and goes with the domain (Phase 3). It must not refer to NS or ProRail (principle 5).
+
 ### 2026-09-29 — "Sprinter" train set = NS Sprinters + all regional stopping trains (Daan: option A)
 **What:** The sprinter set is:
 - NS: only trips labelled *Sprinter*;

@@ -53,6 +53,7 @@ function serveBuildData(): Plugin {
 
 export default defineConfig({
   plugins: [serveBuildData()],
-  build: { target: "es2022", outDir: siteDir(), emptyOutDir: true },
+  // The map chunk is MapLibre itself (about 1 MB, 280 KB compressed), loaded after the page; don't warn about it.
+  build: { target: "es2022", outDir: siteDir(), emptyOutDir: true, chunkSizeWarningLimit: 1100 },
   worker: { format: "es" },
 });
