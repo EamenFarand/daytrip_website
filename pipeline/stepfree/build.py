@@ -22,8 +22,8 @@ import polars as pl
 
 from . import access, config, gtfs, network
 from .config import BUILD, DAY_TYPES, PROFILES, TRAIN_SETS
-from .precompute import origin_results
-from .validate import validate
+from .precompute import more_options_never_worse, origin_results
+from .validate import check_router, validate
 
 FORMAT_VERSION = 1
 
@@ -70,6 +70,10 @@ def main(argv: list[str] | None = None) -> None:
                 for prof_name, dests in per_profile.items():
                     results.setdefault(code, {}).setdefault(day_type, {}).setdefault(prof_name, {})[train_set] = dests
             print(f"  {day_type}/{train_set} done ({time.time() - started:.0f}s)")
+    check_router(results)
+    for per_day in results.values():
+        for day_results in per_day.values():
+            more_options_never_worse(day_results)
 
     served = sorted({c for tt in timetables.values() for c in tt.stations["code"]})
     coords = pl.concat([tt.stations for tt in timetables.values()]).unique("code").sort("code")
@@ -117,7 +121,8 @@ def main(argv: list[str] | None = None) -> None:
         "gtfs": {"version": info["feed_version"], "valid": [info["feed_start_date"], info["feed_end_date"]]},
         "epiap_date": next(iter(stations.values())).source_date,
         "entry_format": "[median_min, fastest_min, departures_per_hour, changes, 'VIA|VIA'?] per change limit 0,1,2; "
-                        "missing trailing entries = same as the last one; null = no journey",
+                        "missing trailing entries = same as the last one; null = no journey; each entry is the best "
+                        "(shortest median) of its own and those with fewer options (changes, intercities, no pram)",
         "sources": [
             {"name": "Dienstregeling (GTFS)", "by": "OVapi / Stichting OpenGeo", "url": "http://gtfs.ovapi.nl/"},
             {"name": "Toegankelijkheid stations (NeTEx EPIAP)", "by": "DOVA / ProRail via NDOV Loket", "licence": "CC0",

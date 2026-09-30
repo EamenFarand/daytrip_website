@@ -36,7 +36,10 @@ Locally, downloads and output live outside the repo, set in `.env` (`STEPFREE_CA
    - Unknown = not step-free.
 6. **Train sets**: `all`, or `sprinter` (NS Sprinters plus every regional and cross-border stopping train; no NS Intercity or international trains).
 7. **Summaries** ([precompute.py](stepfree/precompute.py)): per destination, the median and fastest duration, departures per hour, and the changes and via stations of the median journey.
-8. **Validation** ([validate.py](stepfree/validate.py)): the build only goes live if it passes structural checks, invariants and known answers.
+8. **More options never look worse** (`more_options_never_worse`). Each entry becomes the best (shortest median) of its own and those of the variants with fewer options: fewer changes, sprinters only, or the pram profile. Without this step, allowing a change could make a destination's typical time *longer*. For example, Utrecht C → Abcoude has 3 direct trains of 20 min, but more journeys of 31 min with a change. Abcoude then dropped out of a 30-minute filter when you allowed a change.
+9. **Validation** ([validate.py](stepfree/validate.py)). The build only goes live if it passes two sets of checks:
+   - on the raw router output: more options are never slower;
+   - on the files: structure, never a longer typical time with more options, and known answers.
 
 ## Output (`data/build/`)
 
@@ -50,4 +53,4 @@ Each entry is `[median_min, fastest_min, departures_per_hour, changes, "VIA|VIA"
 
 Example: `"ASD": [null, [49, 49, 4.0, 1, "UT"]]` means no direct train; with 1 or more changes it's 49 minutes via Utrecht Centraal, 4 departures an hour.
 
-Size: about 87 KB per origin file (10 KB compressed), 34 MB in total.
+Size: about 80 KB per origin file (10 KB compressed), 32 MB in total.

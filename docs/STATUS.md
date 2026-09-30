@@ -9,10 +9,15 @@ Phases 0 and 1 are done. Phase 3 needs a name and domain, a report email and a C
 ## Done
 - **Phase 0**: data audit, verdict Go. See `audit/REPORT.md`.
 - **Phase 1**, in `pipeline/` (see `pipeline/README.md`):
-  - `uv run python -m stepfree.build` builds `meta.json`, `stations.json` and 395 `origins/<CODE>.json`. It takes about 2.5 min on 4 cores; output is 34 MB (about 10 KB compressed per origin).
-  - Router: platform-level range RAPTOR, with the stroller profile enforced during the search, both train sets (all / sprinter), weekday Wed 21 Oct and Saturday 24 Oct, 08:30–12:00, 0/1/2 changes.
-  - The build → validate → swap step blocks broken output: structural checks, invariants (pram never faster, sprinter never faster, more changes never slower) and known answers.
-  - Tests: `uv run pytest`, 46 passing and 1 skipped (NS API).
+  - `uv run python -m stepfree.build` builds `meta.json`, `stations.json` and 395 `origins/<CODE>.json`. It takes about 2.5 min on 4 cores; output is 32 MB (about 10 KB compressed per origin).
+  - Router: platform-level range RAPTOR, with the stroller profile enforced during the search, both train sets (all / sprinter), 08:30–12:00, 0/1/2 changes. The days are re-chosen each build: now Wed 28 Oct and Sat 24 Oct.
+  - More options never look worse (fixed 2026-09-30 after Daan's report):
+    - Each entry is the best of its own and those with fewer options: fewer changes, sprinters only, or the pram profile.
+    - Before the fix, Utrecht C within 30 min gave 40 stations direct but 35 with a change allowed.
+  - The build → validate → swap step blocks broken output:
+    - on the raw router output: more options are never slower;
+    - on the files: structure, never a longer typical time with more options, and known answers.
+  - Tests: `uv run pytest`, 53 passing and 1 skipped (NS API).
   - Corrections file `pipeline/overrides/stations.csv`: Houten, Houten Castellum, Den Haag C and Groningen confirmed by Daan, plus the audit's conservative corrections.
 - **Phase 2**, in `web/` (see `web/README.md`):
   - Vite + TypeScript + MapLibre 6.

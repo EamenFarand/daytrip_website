@@ -4,6 +4,14 @@ One entry per non-obvious decision: what, why, and what was rejected. Newest on 
 
 ---
 
+### 2026-09-30 — More options never make a journey look worse
+**What:** Each result shows the best way to travel among the options it allows. With "at most 1 change" you may still go direct; with intercities you may still take only sprinters; a journey that works with a pram works for anyone. So each entry is the best (shortest typical time; then fewer changes, more departures) of its own and those of every variant with fewer options. This happens in the pipeline (`more_options_never_worse`). The validation now checks the typical time, not only the fastest one.
+**Why:** Daan found it: from Utrecht C within 30 minutes, 40 stations were reachable direct but only 35 with a change allowed. More options add journeys at in-between times that are often slower, and that raised the median. Utrecht C → Abcoude: 3 direct trains of 20 min, plus more journeys of 31 min via Breukelen. So the median became 31 and Abcoude fell outside 30 minutes. Across all origins, a station dropped out of a slider step about 10,000 times this way, from allowing changes, adding intercities or dropping the pram profile.
+**Cost:** a result then describes one way of travelling. Abcoude with "max. 1 overstap" shows the 3 direct trains, not the extra options with a change.
+**Rejected:**
+- Filtering on the fastest journey: one rare early train would make a place look close.
+- Counting waiting time (a door-to-door average) would be monotone too, but the times wouldn't match the NS planner.
+
 ### 2026-09-29 — Missing lift data is never shown as "all lifts working"
 **What:** The frontend reads an optional `lifts.json`. Without it, the station panel says live lift status is coming and to check before travelling. Phase 3 must never write a placeholder file with an empty outage list.
 **Why:** Principle 1: no data must look like no data. An empty list would read as "every lift works".
