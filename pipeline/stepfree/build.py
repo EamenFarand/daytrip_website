@@ -20,7 +20,7 @@ from datetime import date, datetime, timezone
 
 import polars as pl
 
-from . import access, config, gtfs, network
+from . import access, config, gtfs, inputs, network
 from .config import BUILD, DAY_TYPES, PROFILES, TRAIN_SETS
 from .precompute import more_options_never_worse, origin_results
 from .validate import check_router, validate
@@ -120,6 +120,7 @@ def main(argv: list[str] | None = None) -> None:
                        "sprinter": "NS Sprinters and all regional/cross-border stopping trains; no NS Intercity or international"},
         "gtfs": {"version": info["feed_version"], "valid": [info["feed_start_date"], info["feed_end_date"]]},
         "epiap_date": next(iter(stations.values())).source_date,
+        "inputs": inputs.fingerprint(),  # lets the nightly job skip a build when nothing changed
         "entry_format": "[median_min, fastest_min, departures_per_hour, changes, 'VIA|VIA'?] per change limit 0,1,2; "
                         "missing trailing entries = same as the last one; null = no journey; each entry is the best "
                         "(shortest median) of its own and those with fewer options (changes, intercities, no pram)",

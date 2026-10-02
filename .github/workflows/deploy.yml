@@ -1,0 +1,123 @@
+# Builds the data and the site, checks them, and publishes to Cloudflare Pages.
+# On the schedule it first checks whether anything changed since the live build, and stops if not.
+# Any failed check stops the run before publishing, so the last good deployment stays live.
+name: Build and deploy
+
+on:
+  schedule:
+    - cron: "40 5 * * *" # after OVapi's daily timetable (about 05:15 UTC)
+    - cron: "10 15 * * *" # catches later updates (NS's IFF came at 13:36 UTC)
+  push:
+    branches: [main]
+    paths: ["pipeline/**", "web/**", "functions/**", ".github/workflows/deploy.yml"]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  STEPFREE_CACHE: ${{ github.workspace }}/data/raw
+  STEPFREE_BUILD: ${{ github.workspace }}/data/build
+  STEPFREE_SITE: ${{ github.workspace }}/site
+  PAGES_PROJECT: trapvrij
+  SITE_URL: https://trapvrij.pages.dev
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Restore the downloaded sources
+        uses: actions/cache/restore@v6
+        with:
+          path: |
+            data/raw
+            !data/raw/gtfs-nl
+          key: sources-${{ github.run_id }}
+          restore-keys: sources-
+
+      - uses: astral-sh/setup-uv@v10
+
+      - name: Install the pipeline
+        working-directory: pipeline
+        run: uv sync --frozen
+
+      - name: Anything new since the live build?
+        id: check
+        working-directory: pipeline
+        run: uv run python -m stepfree.inputs --live "$SITE_URL/data/meta.json" ${{ github.event_name != 'schedule' && '--always' || '' }} | tee -a "$GITHUB_OUTPUT"
+
+      - name: Keep the downloads for next time
+        if: always()
+        continue-on-error: true # an existing cache with the same key is fine
+        uses: actions/cache/save@v6
+        with:
+          path: |
+            data/raw
+            !data/raw/gtfs-nl
+          key: sources-${{ hashFiles('data/raw/*.zip', 'data/raw/netex/*.gz') }}
+
+      - name: Build the data (validated before it's kept)
+        if: steps.check.outputs.build == 'true'
+        working-directory: pipeline
+        run: uv run python -m stepfree.build
+
+      - name: Test against the new build
+        if: steps.check.outputs.build == 'true'
+        working-directory: pipeline
+        run: uv run pytest -q
+
+      - uses: actions/setup-node@v7
+        if: steps.check.outputs.build == 'true'
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build the site
+        if: steps.check.outputs.build == 'true'
+        working-directory: web
+        run: |
+          npm ci
+          npm test
+          npm run build:site
+
+      - name: Create the Pages project if it doesn't exist yet
+        if: steps.check.outputs.build == 'true'
+        env:
+          TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          api="https://api.cloudflare.com/client/v4/accounts/$ACCOUNT/pages/projects"
+          if curl -fsS -o /dev/null -H "Authorization: Bearer $TOKEN" "$api/$PAGES_PROJECT"; then
+            echo "project $PAGES_PROJECT exists"
+          else
+            curl -fsS -X POST -H "Authorization: Bearer $TOKEN" -H "Content-Type: application/json" \
+              -d "{\"name\":\"$PAGES_PROJECT\",\"production_branch\":\"main\"}" "$api" \
+              | jq -r '"created \(.result.name): https://\(.result.subdomain)"'
+          fi
+
+      - name: Publish to Cloudflare Pages
+        if: steps.check.outputs.build == 'true'
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: pages deploy ${{ env.STEPFREE_SITE }} --project-name=${{ env.PAGES_PROJECT }} --branch=main --commit-dirty=true
+
+      - name: Check that the live site serves this build
+        if: steps.check.outputs.build == 'true'
+        run: |
+          want=$(jq -r .built "$STEPFREE_BUILD/meta.json")
+          for i in $(seq 1 12); do
+            got=$(curl -fsS "$SITE_URL/data/meta.json" | jq -r .built || true)
+            [ "$got" = "$want" ] && { echo "live: built $got"; exit 0; }
+            sleep 10
+          done
+          echo "::error::the live site still serves '$got', expected '$want'"; exit 1

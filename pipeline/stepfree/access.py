@@ -18,6 +18,7 @@ import csv
 import gzip
 import re
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from lxml import etree
 
@@ -169,9 +170,13 @@ def apply_overrides(stations: dict[str, Station], path=OVERRIDES) -> None:
             st.notes.append(f"{row['reason']} ({row['source']}, {row['date']})")
 
 
-def load() -> dict[str, Station]:
+def fetch_epiap() -> tuple[Path, str]:
+    """Download the newest daily export (if changed); returns its path and date."""
     url = latest_listed(EPIAP_DIR, r"NeTEx_DOVA_epiap_\d{4}-\d{2}-\d{2}\.xml\.gz")
-    epiap_date = re.search(r"(\d{4}-\d{2}-\d{2})", url).group(1)
-    stations = parse_epiap(fetch(url, "netex/epiap.xml.gz"), epiap_date)
+    return fetch(url, "netex/epiap.xml.gz"), re.search(r"(\d{4}-\d{2}-\d{2})", url).group(1)
+
+
+def load() -> dict[str, Station]:
+    stations = parse_epiap(*fetch_epiap())
     apply_overrides(stations)
     return stations
