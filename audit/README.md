@@ -24,7 +24,8 @@ Downloads are cached in `../data/raw/` (git-ignored) and only re-fetched when th
 | `sources_misc.py` | Q3, Q6 | NS IFF station attributes, the ProRail 2020 step-free list, track heights, lift/ramp register |
 | `osm.py` | Q3, Q6 | One Overpass query for stations and elevators (cached 7 days) |
 | `build_stations.py` | Q1, Q6 | Joins all sources on NS station code into `stations.csv`, with a `recommended_status` column |
-| `lift_listener.py` | Q5 | Logs the live SIRI-FM lift feed (ZeroMQ) to `data/raw/lifts/*.jsonl`; run separately, e.g. `uv run python lift_listener.py 72` |
+| `lift_listener.py` | Q5 | Logs the live SIRI-FM lift feed (ZeroMQ) to `<cache>/lifts/*.jsonl`; run separately, e.g. `uv run python lift_listener.py 72` |
+| `lift_analysis.py` | Q5 | Reads that log: daily full states, lifts out, changes, push delay, and what a once-a-day state would miss |
 
 ## `stations.csv` columns
 

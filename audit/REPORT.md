@@ -71,18 +71,27 @@ The ProRail 2020 workbook has a trap. In its newer sheet (*Uitrollijst (ex AVG)*
   - 446 lifts at rail stations; 442 marked as monitored.
   - **336 are linked to specific tracks** (a lift on an island platform serves both tracks). The rest mostly serve halls, squares, bus platforms or bridges; a few platform lifts only name their track in the description (e.g. `ZP-LIF-002 Spoor 2/3`).
   - Cross-check: EPIAP and ProRail's June 2026 asset register share **421 lift codes**. The differences are explainable: goods and parking lifts, lifts ProRail doesn't manage, and recent rebuilds.
-- **Update behaviour (from the spec):**
-  - a message on every status change;
-  - the **full state of all lifts once a day**;
-  - a heartbeat every 60 minutes;
-  - long outages (a week or more) carry start and end dates.
-- **How many lifts are out right now:** not yet known, because that needs the daily full-state message. A logger (`lift_listener.py`) is recording the feed for 72 hours from 29 Sep 21:12 CEST. In the first minutes it already caught `ASD-LIF-013` (Amsterdam Centraal, east tunnel, tracks 10/11) **out since 19 June 2024**. Those tracks stay reachable through the west-tunnel lift (`ASD-LIF-025`), which shows why the lift-to-track link matters.
-- **Architecture consequence (Phase 3):** an hourly GitHub Actions job can't just download the current state. Options, cheapest first:
-  - (a) catch the daily full-state message plus the long-outage dates with a short scheduled listening window;
-  - (b) a small always-on listener;
-  - (c) ask NDOV Loket (Reisinformatiegroep) whether a pull or snapshot endpoint exists.
+- **Update behaviour.** The spec promises a message on every status change, the full state once a day, a heartbeat every 60 minutes, and start/end dates for long outages.
 
-  To decide once the 72-hour log shows when the daily snapshot arrives.
+  The log (`lift_listener.py`, 29 Sep 21:14 to 2 Oct 20:14 CEST; the PC slept 4 hours on 30 Sep; analysed by `lift_analysis.py`) shows:
+  - **The full state arrives every night at 04:02 CEST**, on all 3 nights: 457 messages for 443 lifts. 14 lifts appear twice, e.g. a current status plus a planned outage.
+  - **Heartbeats come every 10 minutes**, not every 60.
+  - **Changes are pushed 3.4 minutes after they happen** (median; 90% within 6 minutes).
+    - There are about 750 status messages a day, of which about 200 are real changes, for 50–65 lifts.
+    - Two lifts resend their status every 5 minutes and make up half of all messages: Nijmegen Goffert `NMGO-LIF-001` and Amsterdam Centraal `ASD-LIF-013`.
+  - **The change stream can stop without warning.** On 2 Oct no changes arrived after 00:55, at least until 20:14, while the heartbeats and the 04:02 full state did arrive. A 7-minute check from 20:21 to 20:28 still saw a heartbeat but no status messages, although one lift normally resends every 5 minutes. By then there had been no changes for more than 19½ hours.
+- **How many lifts are out:**
+  - In each nightly state, 41–45 lifts are *not available* and 13–14 *unknown*. On 2 Oct that was 42 + 14; 43 of those 56 serve a platform track.
+  - 8 have been out for more than 30 days. For example `ASD-LIF-013` (Amsterdam Centraal, east tunnel, tracks 10/11) has been out since 19 June 2024; those tracks stay reachable through the west-tunnel lift `ASD-LIF-025`, which shows why the lift-to-track link matters.
+  - 14 outages carry a planned end date.
+  - 442 of the 443 lift IDs tie to a station in our data.
+- **How out of date a once-a-day state gets.** I replayed the changes between two nightly states. At an average moment, the state from 04:02 showed 3–6 lifts as working that were really out, and 8–10 as out that were working again. Even with every change applied, 6–8 lifts still differed from the next nightly state, so a continuous listener must also reset to the nightly state.
+- **Architecture consequence (Phase 3).** An hourly job can't just download the current state. The options:
+  - (a) a nightly job that catches the 04:02 full state;
+  - (b) an always-on listener;
+  - (c) asking NDOV Loket for a way to fetch the current state.
+
+  Recommendation: (a) for launch, plus (c). Daan decides (NEEDS_DAAN item 2).
 
 ## Q6 — Agreement between sources
 

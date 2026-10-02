@@ -1,4 +1,4 @@
-# Stepfree NL (working title)
+# Trapvrij (trapvrij.nl)
 
 A map-based web tool: pick any Dutch railway station as origin and see which stations you can reach **step-free** — with a pram in v1, wheelchair later — filtered by number of changes and travel time. Later, each destination gets a "what to do here with a pram" page.
 

@@ -94,12 +94,6 @@ a {
   font-size: 1.35rem;
   margin: 0;
 }
-.working {
-  font-size: 0.75rem;
-  font-weight: normal;
-  color: var(--muted);
-  vertical-align: middle;
-}
 .tagline {
   margin: 2px 0 0;
   color: var(--ink-2);

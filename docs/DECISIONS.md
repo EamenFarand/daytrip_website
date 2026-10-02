@@ -4,6 +4,16 @@ One entry per non-obvious decision: what, why, and what was rejected. Newest on 
 
 ---
 
+### 2026-10-02 — Name: Trapvrij, on trapvrij.nl (Daan)
+**What:**
+- The product is called **Trapvrij**. The domain `trapvrij.nl` is registered at TransIP.
+- Error reports go to Daan's address for now. It's set in one place, `web/src/contact.ts`.
+- Internal names stay as they are: the Python package `stepfree`, the `STEPFREE_*` settings and the `stepfree-nl` cache folder.
+
+**Why:**
+- The name is Dutch, says what the site is about, and doesn't refer to NS or ProRail (principle 5).
+- Renaming the internal names would only cause churn.
+
 ### 2026-09-30 — More options never make a journey look worse
 **What:** Each result shows the best way to travel among the options it allows. With "at most 1 change" you may still go direct; with intercities you may still take only sprinters; a journey that works with a pram works for anyone. So each entry is the best (shortest typical time; then fewer changes, more departures) of its own and those of every variant with fewer options. This happens in the pipeline (`more_options_never_worse`). The validation now checks the typical time, not only the fastest one.
 **Why:** Daan found it: from Utrecht C within 30 minutes, 40 stations were reachable direct but only 35 with a change allowed. More options add journeys at in-between times that are often slower, and that raised the median. Utrecht C → Abcoude: 3 direct trains of 20 min, plus more journeys of 31 min via Breukelen. So the median became 31 and Abcoude fell outside 30 minutes. Across all origins, a station dropped out of a slider step about 10,000 times this way, from allowing changes, adding intercities or dropping the pram profile.

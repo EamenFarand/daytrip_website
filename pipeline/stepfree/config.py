@@ -30,7 +30,7 @@ def env(key: str) -> str | None:
 CACHE = Path(env("STEPFREE_CACHE") or ROOT / "data" / "raw")
 BUILD = Path(env("STEPFREE_BUILD") or ROOT / "data" / "build")
 
-USER_AGENT = "stepfree-nl/0.1 (+https://github.com/EamenFarand/daytrip_website)"
+USER_AGENT = "trapvrij/0.1 (+https://trapvrij.nl; https://github.com/EamenFarand/daytrip_website)"
 
 # Sources
 GTFS_URL = "http://gtfs.ovapi.nl/nl/gtfs-nl.zip"

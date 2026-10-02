@@ -1,6 +1,7 @@
 import "./style.css";
 
 import { Combobox } from "./combobox";
+import { REPORT_EMAIL, reportLink } from "./contact";
 import { loadLifts, loadMeta, loadOrigin, loadStations } from "./data";
 import { clock, duration, longDate, shortDate } from "./format";
 import { renderLegend, renderList } from "./list";
@@ -123,6 +124,7 @@ async function start(): Promise<void> {
   }
   stationDialog.addEventListener("close", () => state.selected && closeStation());
   $("about-open").addEventListener("click", () => aboutDialog.showModal());
+  $("report-mail").replaceChildren(reportLink(REPORT_EMAIL, "Trapvrij: fout gezien"));
 
   // --- state --------------------------------------------------------------------------------
   function setState(patch: Partial<State>): void {

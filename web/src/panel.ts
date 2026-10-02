@@ -1,5 +1,6 @@
 // Station details in a dialog: step-free status with source and date, the journey, lifts, and links to check.
 
+import { reportLink } from "./contact";
 import { ACCESS_ICON, ACCESS_TEXT, TRACK_TEXT, changes, clock, duration, frequency, longDate, shortDate } from "./format";
 import type { Verdict } from "./results";
 import type { LiftStatus, Meta, Station } from "./types";
@@ -135,6 +136,9 @@ function links(st: Station, ctx: PanelContext): HTMLElement {
   }
   a(`https://www.ns.nl/stationsinformatie/${st.code.toLowerCase()}`, `Stationsinformatie ${st.name} (NS)`);
   box.append(ul);
+  const report = el("p", undefined, "small");
+  report.append(reportLink("Klopt er iets niet bij dit station? Meld het", `Trapvrij: fout bij station ${st.name} (${st.code})`));
+  box.append(report);
   return box;
 }
 

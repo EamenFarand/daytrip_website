@@ -1,4 +1,4 @@
-# web — the map frontend
+# web — the Trapvrij site
 
 A static site (Vite + TypeScript + MapLibre GL). Pick an origin station and see which stations you can reach, filtered by profile, trains, day, changes and travel time. It has no backend: it reads the JSON files the pipeline builds.
 
@@ -45,6 +45,7 @@ All from `/data/` (format in `pipeline/README.md`):
 | `src/map.ts` | The map (loaded after the page). Travel time by colour; every other state by shape. |
 | `src/panel.ts` | The station dialog: step-free status with source and date, the journey, lifts, links to NS to double-check. |
 | `src/format.ts` | Dutch wording for durations, changes, frequencies and statuses. |
+| `src/contact.ts` | The address for error reports, and mailto links with the subject filled in. |
 | `src/colors.ts` | The travel-time colours for light and dark mode. |
 
 `public/_redirects` makes `/station/<code>` serve the app on Cloudflare Pages. The path is reserved for destination pages; for now it opens that station.
