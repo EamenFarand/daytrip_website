@@ -2,6 +2,7 @@
 
 import { reportLink } from "./contact";
 import { ACCESS_ICON, ACCESS_TEXT, TRACK_TEXT, changes, clock, duration, frequency, longDate, shortDate } from "./format";
+import { type Freshness, type StationWarning, freshnessText, journeyWarnings, outAt, outText } from "./lifts";
 import type { Verdict } from "./results";
 import type { LiftStatus, Meta, Station } from "./types";
 
@@ -12,8 +13,28 @@ export interface PanelContext {
   dayLabel: string; // "doordeweeks" / "op zaterdag"
   dayIso: string;
   lifts: LiftStatus | null;
+  fresh: Freshness;
   stroller: boolean;
   onStartHere: (code: string) => void;
+}
+
+const ROLE_TEXT = { vertrek: "vertrek", overstap: "overstap", aankomst: "aankomst" };
+
+/** "⚠ lift buiten gebruik" or "⚠ liftstatus onbekend", for a station on the journey. */
+export function liftNote(w: StationWarning): string {
+  return w.out.some((o) => o.status !== "unknown") ? "⚠ lift buiten gebruik" : "⚠ liftstatus onbekend";
+}
+
+function warningBox(warnings: StationWarning[]): HTMLElement {
+  const box = el("div", undefined, "warn-box");
+  box.setAttribute("role", "note");
+  box.append(el("strong", "⚠ Let op: liften op je route"));
+  const ul = el("ul");
+  for (const w of warnings) {
+    for (const o of w.out) ul.append(el("li", `${w.station.name} (${ROLE_TEXT[w.role]}): ${outText(o)}`));
+  }
+  box.append(ul, el("p", "Misschien heb je die lift nodig voor je perron. Controleer je route, of vraag hulp op het station.", "small"));
+  return box;
 }
 
 function el<K extends keyof HTMLElementTagNameMap>(tag: K, text?: string, cls?: string): HTMLElementTagNameMap[K] {
@@ -59,6 +80,8 @@ function journeyBlock(v: Verdict, ctx: PanelContext): HTMLElement | null {
   const windowText = `${clock(start)} en ${clock(end)}`;
   if (v.entry) {
     const [median, fastest, perHour, n, via] = v.entry;
+    const warnings = journeyWarnings(v.entry, ctx.origin, v.station, ctx.names, ctx.lifts, ctx.fresh);
+    const warnAt = new Map(warnings.map((w) => [w.station.code, w]));
     const dl = el("dl", undefined, "facts");
     const add = (term: string, value: string) => dl.append(el("dt", term), el("dd", value));
     add("Reistijd", median === fastest ? duration(median) : `meestal ${duration(median)} (snelste ${duration(fastest)})`);
@@ -66,13 +89,16 @@ function journeyBlock(v: Verdict, ctx: PanelContext): HTMLElement | null {
     if (via) {
       const names = via.split("|").map((c) => {
         const s = ctx.names.get(c);
-        return s ? `${s.name} (${ACCESS_TEXT[s.status].toLowerCase()})` : c;
+        if (!s) return c;
+        const w = warnAt.get(c); // never plain "drempelvrij" while a lift there is out
+        return `${s.name} (${ACCESS_TEXT[s.status].toLowerCase()}${w ? `, ${liftNote(w)}` : ""})`;
       });
       add("Overstappen in", names.join(", "));
     }
     add("Hoe vaak", frequency(perHour, (end - start) / 60, windowText));
     box.append(dl);
-    box.append(el("p", `Gebaseerd op de dienstregeling van ${longDate(ctx.dayIso)}, vertrek tussen ${windowText}.`, "small"));
+    if (warnings.length) box.append(warningBox(warnings));
+    box.append(el("p", `Gebaseerd op de dienstregeling van ${longDate(ctx.dayIso)}, vertrek tussen ${windowText}. ${freshnessText(ctx.lifts, ctx.fresh)}`, "small"));
   } else {
     const why =
       v.category === "not-step-free"
@@ -89,16 +115,17 @@ function liftBlock(st: Station, ctx: PanelContext): HTMLElement | null {
   if (!st.lifts.length) return null;
   const box = el("section");
   box.append(el("h3", "Liften", "panel-h"));
-  const out = new Map((ctx.lifts?.out ?? []).map((o) => [o.id, o]));
-  const broken = st.lifts.filter((l) => out.has(l.id)).length;
+  const out = new Map(outAt(st, ctx.lifts, ctx.fresh).map((o) => [o.lift.id, o]));
+  const broken = out.size;
   const ul = el("ul", undefined, "lifts");
   for (const lift of st.lifts) {
     const where = lift.tracks.length ? `spoor ${lift.tracks.join("/")}` : "hal of ingang";
     const li = el("li", `${lift.code ?? lift.id} (${where})`);
     const o = out.get(lift.id);
     if (o) {
-      const warn = el("strong", ` ⚠ Buiten gebruik${o.since ? ` sinds ${shortDate(o.since)}` : ""}`, "warn");
-      li.append(warn);
+      // no "since": the feed restarts that date with every nightly full status, so it's often wrong
+      const what = o.status === "unknown" ? " ⚠ Status onbekend" : " ⚠ Buiten gebruik";
+      li.append(el("strong", what + (o.until ? `, naar verwachting tot ${shortDate(o.until)}` : ""), "warn"));
     }
     ul.append(li);
   }
@@ -108,12 +135,10 @@ function liftBlock(st: Station, ctx: PanelContext): HTMLElement | null {
   } else {
     const details = el("details");
     details.open = broken > 0;
-    details.append(el("summary", `${st.lifts.length} liften${broken ? `, ${broken} buiten gebruik` : ""}`), ul);
+    details.append(el("summary", `${st.lifts.length} liften${broken ? `, ${broken} met een storing` : ""}`), ul);
     box.append(details);
   }
-  box.append(
-    el("p", ctx.lifts ? `Liftstatus bijgewerkt: ${new Date(ctx.lifts.updated).toLocaleString("nl-NL")}.` : "Actuele liftstoringen tonen we binnenkort. Controleer ze vóór vertrek.", "small"),
-  );
+  box.append(el("p", freshnessText(ctx.lifts, ctx.fresh), "small"));
   return box;
 }
 

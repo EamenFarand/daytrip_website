@@ -1,6 +1,7 @@
 // The results as a list: the accessible equivalent of the map, and the easiest way to browse on a phone.
 
 import { ACCESS_ICON, ACCESS_TEXT, changes, duration, frequency } from "./format";
+import type { StationWarning } from "./lifts";
 import { BAND_LABELS, type Verdict } from "./results";
 import type { Station } from "./types";
 
@@ -12,6 +13,7 @@ export interface ListContext {
   windowHours: number;
   ramp: string[];
   waiting: string | null; // why there are no results yet (no origin, loading...), or null once they're in
+  warnings: (v: Verdict) => StationWarning[]; // lifts out along the journey
   onPick: (code: string) => void;
 }
 
@@ -39,13 +41,19 @@ function item(v: Verdict, ctx: ListContext): HTMLLIElement {
     const [median, , perHour, n, via] = v.entry;
     const viaNames = via ? via.split("|").map((c) => ctx.names.get(c)?.name ?? c) : [];
     meta.textContent = [duration(median), changes(n), frequency(perHour, ctx.windowHours, ctx.windowText)].join(" · ");
+    text.append(name, meta);
     if (viaNames.length) {
       const viaEl = document.createElement("span");
       viaEl.className = "result-via";
       viaEl.textContent = `via ${viaNames.join(", ")}`;
-      text.append(name, meta, viaEl);
-    } else {
-      text.append(name, meta);
+      text.append(viaEl);
+    }
+    const warnings = ctx.warnings(v);
+    if (warnings.length) {
+      const warn = document.createElement("span");
+      warn.className = "result-warn";
+      warn.textContent = `⚠ Liftstoring: ${warnings.map((w) => w.station.name).join(", ")}`;
+      text.append(warn);
     }
   } else {
     meta.textContent = `${ACCESS_ICON[v.station.status]} ${ACCESS_TEXT[v.station.status]}`;

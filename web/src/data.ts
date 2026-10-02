@@ -26,10 +26,13 @@ export function loadOrigin(code: string): Promise<OriginDoc> {
   return p;
 }
 
-/** Current lift outages. Optional: the file arrives with the live feed in Phase 3. */
+/** Current lift outages, from the home-server listener via a Cloudflare function. None (yet) = unknown. */
 export async function loadLifts(): Promise<LiftStatus | null> {
   try {
-    return await getJson<LiftStatus>("lifts.json");
+    const res = await fetch("/api/lifts");
+    if (!res.ok) return null;
+    const lifts = (await res.json()) as LiftStatus;
+    return Array.isArray(lifts.out) ? lifts : null;
   } catch {
     return null;
   }

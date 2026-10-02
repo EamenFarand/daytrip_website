@@ -640,6 +640,21 @@ details[open] > summary::before {
 .warn {
   color: var(--bad);
 }
+.warn-box {
+  margin: 12px 0 4px;
+  padding: 8px 12px;
+  border-left: 4px solid var(--bad);
+  background: var(--page);
+}
+.warn-box ul {
+  margin: 4px 0;
+  padding-left: 20px;
+}
+.result-warn {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--bad);
+}
 .primary {
   font: inherit;
   font-weight: 600;

@@ -145,6 +145,13 @@ def test_first_train_must_leave_within_the_window():
     assert found == {}
 
 
+def test_the_summary_records_the_tracks_used():
+    net, found = search(FAST | SLOW, "stroller")
+    s = summarise(net, found["D"][1])
+    assert s.via == ("Y",) and s.tracks == ("2", "1", "2", "1")  # leave O from 2, change at Y from 1 to 2, arrive on 1
+    assert s.encode()[4:] == ["Y", "2|1|2|1"]
+
+
 def test_profile_keeps_only_sensible_journeys_and_summarises_them():
     trips = {}
     for i, dep in enumerate(["10:00", "10:30", "11:00", "11:30"]):

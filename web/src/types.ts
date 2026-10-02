@@ -42,8 +42,13 @@ export interface Meta {
   sources: { name: string; by: string; url: string; licence?: string }[];
 }
 
-/** [median, fastest, departures per hour, changes, "VIA|VIA"?] */
-export type Entry = [number, number, number, number] | [number, number, number, number, string];
+/** [median, fastest, departures per hour, changes, "VIA|VIA" ("" if direct), "TRACKS"]
+ * TRACKS: departure, then arrival and departure at each change, then arrival; "?" = unknown.
+ * Older builds (and hand-made tests) may stop after changes or via. */
+export type Entry =
+  | [number, number, number, number]
+  | [number, number, number, number, string]
+  | [number, number, number, number, string, string];
 
 export type Results = Record<Day, Record<Profile, Record<TrainSet, Record<string, (Entry | null)[]>>>>;
 
@@ -54,8 +59,12 @@ export interface OriginDoc {
   results: Partial<Results>;
 }
 
-/** Optional: filled from the live lift feed in Phase 3. */
+/** GET /api/lifts, written by the home-server listener (lifts/listener.py). */
 export interface LiftStatus {
-  updated: string;
-  out: { id: string; since: string | null; until: string | null }[];
+  v: number;
+  updated: string; // when the listener published this
+  full_state_at: string | null; // the last nightly full status (~04:02)
+  last_message_at: string | null; // the last status message of any kind
+  lifts: number;
+  out: { id: string; status: string; since: string | null; until: string | null }[];
 }

@@ -40,13 +40,25 @@ function serveBuildData(): Plugin {
     res.setHeader("Content-Type", file.endsWith(".json") ? "application/json; charset=utf-8" : "application/octet-stream");
     fs.createReadStream(file).pipe(res);
   };
+  // /api/lifts is a Cloudflare function in production; locally it serves STEPFREE_LIFTS (a file), or 404
+  const lifts = (_req: unknown, res: import("node:http").ServerResponse) => {
+    const file = envValue("STEPFREE_LIFTS");
+    if (!file || !fs.existsSync(file)) {
+      res.statusCode = 404;
+      return res.end();
+    }
+    res.setHeader("Content-Type", "application/json; charset=utf-8");
+    fs.createReadStream(file).pipe(res);
+  };
   return {
     name: "serve-build-data",
     configureServer(server) {
       server.middlewares.use("/data", handler);
+      server.middlewares.use("/api/lifts", lifts);
     },
     configurePreviewServer(server) {
       server.middlewares.use("/data", handler);
+      server.middlewares.use("/api/lifts", lifts);
     },
   };
 }

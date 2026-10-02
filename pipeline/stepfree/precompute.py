@@ -35,12 +35,12 @@ class Summary:
     per_hour: float
     changes: int
     via: tuple[str, ...]
+    # Tracks of the typical journey, for lift warnings on the platforms actually used:
+    # departure, then arrival and departure at each change, then arrival ("?" = not in the timetable).
+    tracks: tuple[str, ...] = ()
 
     def encode(self) -> list:
-        out = [self.median, self.fastest, self.per_hour, self.changes]
-        if self.via:
-            out.append("|".join(self.via))
-        return out
+        return [self.median, self.fastest, self.per_hour, self.changes, "|".join(self.via), "|".join(self.tracks)]
 
 
 def summarise(net: Network, journeys: list[Journey]) -> Summary | None:
@@ -48,13 +48,19 @@ def summarise(net: Network, journeys: list[Journey]) -> Summary | None:
         return None
     by_duration = sorted(journeys, key=lambda j: (j.duration, j.changes, -j.dep))
     typical = by_duration[(len(by_duration) - 1) // 2]  # lower median: always a real journey
-    via = tuple(net.station_codes[net.stop_station[leg.alight_stop]] for leg in typical.legs[:-1])
+    legs = typical.legs
+    via = tuple(net.station_codes[net.stop_station[leg.alight_stop]] for leg in legs[:-1])
+    tracks = [net.stop_platform[legs[0].board_stop]]
+    for a, b in zip(legs, legs[1:]):
+        tracks += [net.stop_platform[a.alight_stop], net.stop_platform[b.board_stop]]
+    tracks.append(net.stop_platform[legs[-1].alight_stop])
     return Summary(
         median=typical.duration,
         fastest=by_duration[0].duration,
         per_hour=round(len(journeys) / WINDOW_HOURS, 1),
         changes=typical.changes,
         via=via,
+        tracks=tuple(tracks),
     )
 
 

@@ -1,0 +1,16 @@
+services:
+  lifts:
+    build: .
+    image: trapvrij-lifts
+    restart: unless-stopped
+    env_file: .env
+    volumes:
+      - lifts-data:/data # the saved lift states, so a restart carries on
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+volumes:
+  lifts-data:

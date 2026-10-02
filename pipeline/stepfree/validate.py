@@ -105,9 +105,12 @@ def validate(build: Path, partial: bool = False) -> None:
                             if e is None:
                                 continue
                             med, fast, per_hour, changes = e[:4]
-                            via = e[4].split("|") if len(e) > 4 else []
+                            via = e[4].split("|") if len(e) > 4 and e[4] else []
+                            tracks = e[5].split("|") if len(e) > 5 else None
                             if not (0 < fast <= med) or per_hour <= 0 or changes > k or len(via) != changes:
                                 errors.append(f"{where} k={k}: malformed {e}")
+                            elif tracks is not None and len(tracks) != 2 + 2 * changes:
+                                errors.append(f"{where} k={k}: tracks don't fit the changes {e}")
         errors += _never_worse(o, doc["results"], MEDIAN, "a longer typical time")
         if len(errors) > 50:
             break

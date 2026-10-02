@@ -4,11 +4,12 @@ import { Combobox } from "./combobox";
 import { REPORT_EMAIL, reportLink } from "./contact";
 import { loadLifts, loadMeta, loadOrigin, loadStations } from "./data";
 import { clock, duration, longDate, pageTitle, shortDate } from "./format";
+import { freshness, journeyWarnings } from "./lifts";
 import { renderLegend, renderList } from "./list";
 import { RAMP } from "./colors";
 import type { StationMap } from "./map";
 import { renderPanel } from "./panel";
-import { originUsable, verdicts } from "./results";
+import { originUsable, verdicts, type Verdict } from "./results";
 import { StationSearch } from "./search";
 import { MAX_MINUTES, MINUTE_STEPS, fromHash, pagePath, stationFromPath, toHash, type State } from "./state";
 import type { LiftStatus, Meta, OriginDoc, Station } from "./types";
@@ -195,9 +196,12 @@ async function start(): Promise<void> {
     summary.textContent = text;
     const waiting = !usable || loading || !doc ? text : null; // the list then says why it's empty
 
+    const fresh = freshness(lifts, new Date());
+    const warnings = (v: Verdict) => journeyWarnings(v.entry, usable ? origin : undefined, v.station, byCode, lifts, fresh);
+
     map?.update(current, state.selected);
     renderLegend($("legend"), ramp(), { maxMinutes: state.maxMinutes, stroller, waiting: waiting !== null, origin: !!origin });
-    renderList($("results"), current, { names: byCode, windowText, windowHours: (winEnd - winStart) / 60, ramp: ramp(), waiting, onPick: (code) => setState({ selected: code }) }, stroller);
+    renderList($("results"), current, { names: byCode, windowText, windowHours: (winEnd - winStart) / 60, ramp: ramp(), waiting, warnings, onPick: (code) => setState({ selected: code }) }, stroller);
     renderSelection();
   }
 
@@ -215,6 +219,7 @@ async function start(): Promise<void> {
         dayLabel: state.day === "weekday" ? "doordeweeks" : "op zaterdag",
         dayIso: meta.days[state.day],
         lifts,
+        fresh: freshness(lifts, new Date()),
         stroller,
         onStartHere: (code) => {
           stationDialog.close();
@@ -246,10 +251,15 @@ async function start(): Promise<void> {
   }
 
   dark.addEventListener("change", () => render());
-  void loadLifts().then((l) => {
-    lifts = l;
-    if (l) render();
-  });
+  // lift status changes during the day: fetch it now and every 5 minutes while the page is open
+  const updateLifts = () =>
+    loadLifts().then((l) => {
+      const changed = JSON.stringify(l) !== JSON.stringify(lifts);
+      lifts = l;
+      if (changed) render();
+    });
+  void updateLifts();
+  setInterval(() => void updateLifts(), 5 * 60_000);
   await refresh();
 }
 
