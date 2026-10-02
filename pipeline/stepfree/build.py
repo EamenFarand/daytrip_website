@@ -13,8 +13,11 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import shutil
 import time
+import unicodedata
+from collections import Counter
 from concurrent.futures import ProcessPoolExecutor
 from datetime import date, datetime, timezone
 
@@ -26,6 +29,18 @@ from .precompute import more_options_never_worse, origin_results
 from .validate import check_router, validate
 
 FORMAT_VERSION = 1
+
+
+def slugify(name: str) -> str:
+    """A readable URL name: "'s-Hertogenbosch Oost" -> "s-hertogenbosch-oost"."""
+    plain = unicodedata.normalize("NFKD", name).encode("ascii", "ignore").decode().lower().replace("'", "")
+    return re.sub(r"[^a-z0-9]+", "-", plain).strip("-")
+
+
+def unique_slugs(names: dict[str, str]) -> dict[str, str]:
+    """code -> slug for station pages; a name that would collide gets its code appended."""
+    counts = Counter(slugify(n) for n in names.values())
+    return {code: slugify(n) if counts[slugify(n)] == 1 else f"{slugify(n)}-{code.lower()}" for code, n in names.items()}
 
 
 def _run_combo(args) -> tuple[str, str, dict]:
@@ -104,6 +119,9 @@ def main(argv: list[str] | None = None) -> None:
             "uic": st.uic if st else None,
             "lifts": [{"id": lf["id"], "code": lf["code"], "tracks": lf["tracks"]} for lf in st.lifts] if st else [],
         })
+    slugs = unique_slugs({r["code"]: r["name"] for r in station_rows})
+    for r in station_rows:
+        r["slug"] = slugs[r["code"]]  # the station page: /station/<slug>/
     built_at = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
     for code in served:
         doc = {"v": FORMAT_VERSION, "origin": code, "built": built_at, "results": results.get(code, {})}

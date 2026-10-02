@@ -4,7 +4,7 @@ import { StationSearch, editDistance, normalise } from "./search";
 import type { Station } from "./types";
 
 const station = (code: string, name: string, trains: number): Station => ({
-  code, name, trains, aliases: [], lat: 52, lon: 5, status: "yes", tracks: {}, source: "EPIAP",
+  code, name, slug: code.toLowerCase(), trains, aliases: [], lat: 52, lon: 5, status: "yes", tracks: {}, source: "EPIAP",
   source_date: null, verified: null, notes: [], uic: null, lifts: [],
 });
 

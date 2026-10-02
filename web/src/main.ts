@@ -3,14 +3,14 @@ import "./style.css";
 import { Combobox } from "./combobox";
 import { REPORT_EMAIL, reportLink } from "./contact";
 import { loadLifts, loadMeta, loadOrigin, loadStations } from "./data";
-import { clock, duration, longDate, shortDate } from "./format";
+import { clock, duration, longDate, pageTitle, shortDate } from "./format";
 import { renderLegend, renderList } from "./list";
 import { RAMP } from "./colors";
 import type { StationMap } from "./map";
 import { renderPanel } from "./panel";
 import { originUsable, verdicts } from "./results";
 import { StationSearch } from "./search";
-import { MAX_MINUTES, MINUTE_STEPS, fromHash, stationFromPath, toHash, type State } from "./state";
+import { MAX_MINUTES, MINUTE_STEPS, fromHash, pagePath, stationFromPath, toHash, type State } from "./state";
 import type { LiftStatus, Meta, OriginDoc, Station } from "./types";
 
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
@@ -26,15 +26,20 @@ async function start(): Promise<void> {
     return;
   }
   const byCode = new Map(stations.map((s) => [s.code, s]));
+  const bySlug = new Map(stations.map((s) => [s.slug, s]));
   const known = (code: string) => byCode.has(code);
   const [winStart, winEnd] = meta.window;
   const windowText = `${clock(winStart)} en ${clock(winEnd)}`;
   const dark = window.matchMedia("(prefers-color-scheme: dark)");
   const ramp = () => RAMP[dark.matches ? "dark" : "light"];
 
+  // The origin is the station whose page this is; older links carry it in the hash (#van=HTNC).
+  const pageOrigin = () => bySlug.get(stationFromPath(location.pathname) ?? "")?.code ?? null;
+  const urlFor = (s: State) => pagePath(s.origin ? (byCode.get(s.origin)?.slug ?? null) : null) + toHash(s);
   let state: State = fromHash(location.hash, known);
-  const fromPath = stationFromPath(location.pathname);
-  if (fromPath && known(fromPath)) state.selected = fromPath;
+  state.origin ??= pageOrigin();
+  history.replaceState(null, "", urlFor(state));
+  const intro = $("intro"); // a station page's own text, for search engines and visitors without JavaScript
   let doc: OriginDoc | null = null;
   let loading = false;
   let lifts: LiftStatus | null = null;
@@ -130,7 +135,7 @@ async function start(): Promise<void> {
   function setState(patch: Partial<State>): void {
     const originChanged = patch.origin !== undefined && patch.origin !== state.origin;
     state = { ...state, ...patch };
-    history.replaceState(null, "", `/${toHash(state)}`);
+    history.replaceState(null, "", urlFor(state));
     if (originChanged) {
       const origin = state.origin ? byCode.get(state.origin) : undefined;
       if (origin) map?.reveal(origin.lon, origin.lat);
@@ -163,10 +168,11 @@ async function start(): Promise<void> {
   window.addEventListener("hashchange", () => {
     if (location.hash && !location.hash.includes("=")) {
       // an in-page link such as #results, not a new state: put the state back in the URL
-      history.replaceState(null, "", `/${toHash(state)}`);
+      history.replaceState(null, "", urlFor(state));
       return;
     }
     const next = fromHash(location.hash, known);
+    next.origin ??= pageOrigin();
     const originChanged = next.origin !== state.origin;
     state = next;
     if (originChanged) void refresh();
@@ -179,6 +185,8 @@ async function start(): Promise<void> {
     syncControls();
     const origin = state.origin ? byCode.get(state.origin) : undefined;
     if (origin && document.activeElement !== $("origin")) combo.setValue(origin.name);
+    document.title = pageTitle(origin?.name);
+    if (intro.dataset.station) intro.hidden = intro.dataset.station !== state.origin;
     const usable = originUsable(origin, state);
     current = verdicts(stations, usable ? doc : null, state);
     const stroller = state.profile === "stroller";

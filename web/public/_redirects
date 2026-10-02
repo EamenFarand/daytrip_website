@@ -1,2 +1,0 @@
-# Cloudflare Pages: /station/<code> is reserved for destination pages; for now the app opens that station.
-/station/*  /index.html  200

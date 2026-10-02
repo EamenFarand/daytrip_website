@@ -15,6 +15,7 @@ export interface Lift {
 export interface Station {
   code: string;
   name: string;
+  slug: string; // its page: /station/<slug>/
   aliases: string[];
   trains: number; // train stops per weekday, used to rank search results and labels
   lat: number;

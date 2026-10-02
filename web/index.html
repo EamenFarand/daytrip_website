@@ -4,12 +4,18 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
-    <meta
-      name="description"
-      content="Kies een treinstation en zie waar je met de kinderwagen zonder trappen naartoe kunt: reistijd, overstappen en toegankelijkheid per station."
-    />
+    <!-- scripts/pages.ts fills these in per station page -->
+    <meta name="description" content="Kies een treinstation en zie waar je met de kinderwagen zonder trappen naartoe kunt: reistijd, overstappen en toegankelijkheid per station." />
     <title>Trapvrij – waar kun je heen met de kinderwagen?</title>
+    <link rel="canonical" href="https://trapvrij.nl/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="nl_NL" />
+    <meta property="og:site_name" content="Trapvrij" />
+    <meta property="og:title" content="Trapvrij – waar kun je heen met de kinderwagen?" />
+    <meta property="og:description" content="Kies een treinstation en zie waar je met de kinderwagen zonder trappen naartoe kunt: reistijd, overstappen en toegankelijkheid per station." />
+    <meta property="og:url" content="https://trapvrij.nl/" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <noscript><style>.controls, .status-area, .map-wrap, .list, .skip { display: none !important; }</style></noscript>
   </head>
   <body>
     <a class="skip" href="#results">Naar de lijst met stations</a>
@@ -23,6 +29,11 @@
     </header>
 
     <main class="layout">
+      <section id="intro" class="intro" hidden></section>
+      <noscript>
+        <p class="noscript">De kaart en het zoeken werken met JavaScript. Zonder JavaScript vind je elk station in de <a href="/station/">lijst met alle stations</a>.</p>
+      </noscript>
+
       <section class="controls" aria-label="Vertrekstation en keuzes">
         <div class="search">
           <label for="origin" class="field-label">Vertrekstation</label>
@@ -100,7 +111,7 @@
         Bronnen: dienstregeling van OVapi / Stichting OpenGeo; toegankelijkheid van stations van DOVA en ProRail via NDOV Loket (CC0); overstaptijden van NS via
         NDOV Loket (CC0). Kaart: OpenFreeMap, © OpenMapTiles, © OpenStreetMap-bijdragers.
       </p>
-      <p>Geen cookies, geen tracking. Niet verbonden aan NS of ProRail.</p>
+      <p>Geen cookies, geen tracking. Niet verbonden aan NS of ProRail. <a href="/station/">Alle stations</a></p>
     </footer>
 
     <dialog id="station" class="panel" aria-labelledby="station-title">

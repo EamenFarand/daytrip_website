@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit && vite build",
-    "build:site": "npm run build && node scripts/copy-data.mjs",
+    "build:site": "npm run build && node scripts/copy-data.mjs && node scripts/pages.ts",
     "preview": "vite preview",
     "test": "vitest run"
   },

@@ -1,4 +1,6 @@
-// What the visitor has chosen, mirrored in the URL (#van=HTNC&profiel=kinderwagen...) so a view can be shared.
+// What the visitor has chosen, mirrored in the URL so a view can be shared:
+// the origin is the page (/station/houten-castellum/), the rest the hash (#profiel=geen&overstap=2).
+// Older links with the origin in the hash (#van=HTNC) still work.
 // Nothing is stored anywhere else: no cookies, no local storage.
 
 import type { Day, Profile, TrainSet } from "./types";
@@ -34,9 +36,9 @@ function reverse<T extends string>(map: Record<T, string>, value: string | null)
   return (Object.keys(map) as T[]).find((k) => map[k] === value);
 }
 
+/** Everything except the origin, which is in the path (see pagePath). */
 export function toHash(s: State): string {
   const p = new URLSearchParams();
-  if (s.origin) p.set("van", s.origin);
   if (s.profile !== DEFAULTS.profile) p.set("profiel", PROFILE[s.profile]);
   if (s.trains !== DEFAULTS.trains) p.set("treinen", TRAINS[s.trains]);
   if (s.day !== DEFAULTS.day) p.set("dag", DAY[s.day]);
@@ -67,8 +69,13 @@ export function fromHash(hash: string, known: (code: string) => boolean): State 
   };
 }
 
-/** /station/UT opens that station's panel (the path is reserved for destination pages later). */
+/** /station/houten-castellum/ -> "houten-castellum": the station whose page this is. */
 export function stationFromPath(path: string): string | null {
-  const m = path.match(/^\/station\/([A-Za-z0-9]+)\/?$/);
-  return m ? m[1].toUpperCase() : null;
+  const m = path.match(/^\/station\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/);
+  return m ? m[1] : null;
+}
+
+/** The page for an origin: its station page, or the home page. */
+export function pagePath(slug: string | null): string {
+  return slug ? `/station/${slug}/` : "/";
 }

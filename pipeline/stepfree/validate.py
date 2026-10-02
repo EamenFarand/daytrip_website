@@ -17,6 +17,8 @@
 from __future__ import annotations
 
 import json
+import re
+from collections import Counter
 from pathlib import Path
 
 from .precompute import expand_levels
@@ -78,6 +80,11 @@ def validate(build: Path, partial: bool = False) -> None:
     for s in stations.values():
         if s["status"] not in ("yes", "partial", "no", "unknown"):
             errors.append(f"{s['code']}: bad status {s['status']}")
+        if not re.fullmatch(r"[a-z0-9]+(-[a-z0-9]+)*", s.get("slug") or ""):
+            errors.append(f"{s['code']}: bad page name {s.get('slug')!r}")
+    doubles = [slug for slug, n in Counter(s.get("slug") for s in stations.values()).items() if n > 1]
+    if doubles:
+        errors.append(f"two stations share a page name: {doubles}")
 
     files = sorted((build / "origins").glob("*.json"))
     if not partial and len(files) < 380:

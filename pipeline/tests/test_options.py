@@ -58,7 +58,7 @@ def test_router_check_catches_a_slower_result_with_more_options():
 def test_validation_rejects_a_longer_typical_time_with_more_changes(tmp_path):
     (tmp_path / "origins").mkdir()
     (tmp_path / "meta.json").write_text("{}")
-    (tmp_path / "stations.json").write_text(json.dumps([{"code": c, "status": "yes"} for c in ("O", "D", "X")]))
+    (tmp_path / "stations.json").write_text(json.dumps([{"code": c, "status": "yes", "slug": c.lower()} for c in ("O", "D", "X")]))
     doc = {"origin": "O", "results": {"weekday": {"any": {"all": {"D": [[20, 20, 1.0, 0], [31, 20, 3.0, 1, "X"]]}}}}}
     (tmp_path / "origins" / "O.json").write_text(json.dumps(doc))
     with pytest.raises(ValidationError, match="longer typical time"):

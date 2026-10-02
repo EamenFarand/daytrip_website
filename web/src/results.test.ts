@@ -1,11 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import { band, level, originUsable, verdicts } from "./results";
-import { DEFAULTS, MAX_MINUTES, fromHash, stationFromPath, toHash, type State } from "./state";
+import { DEFAULTS, MAX_MINUTES, fromHash, pagePath, stationFromPath, toHash, type State } from "./state";
 import type { OriginDoc, Station } from "./types";
 
 const st = (code: string, status: Station["status"] = "yes"): Station => ({
-  code, name: code, trains: 1, aliases: [], lat: 52, lon: 5, status, tracks: {}, source: "EPIAP",
+  code, name: code, slug: code.toLowerCase(), trains: 1, aliases: [], lat: 52, lon: 5, status, tracks: {}, source: "EPIAP",
   source_date: null, verified: null, notes: [], uic: null, lifts: [],
 });
 
@@ -78,16 +78,17 @@ describe("results", () => {
 describe("state in the URL", () => {
   const known = (c: string) => ["HTNC", "UT"].includes(c);
 
-  it("round-trips", () => {
+  it("round-trips everything but the origin, which is in the path", () => {
     const s: State = { origin: "HTNC", profile: "any", trains: "all", day: "saturday", maxChanges: 2, maxMinutes: MAX_MINUTES, selected: "UT" };
-    expect(fromHash(toHash(s), known)).toEqual(s);
+    expect(fromHash(toHash(s), known)).toEqual({ ...s, origin: null });
   });
 
-  it("keeps defaults out of the URL", () => {
-    expect(toHash({ ...DEFAULTS, origin: "HTNC" })).toBe("#van=HTNC");
+  it("keeps defaults and the origin out of the hash", () => {
+    expect(toHash({ ...DEFAULTS, origin: "HTNC" })).toBe("");
+    expect(toHash({ ...DEFAULTS, maxChanges: 2 })).toBe("#overstap=2");
   });
 
-  it("a missing value means the default, not zero", () => {
+  it("a missing value means the default, not zero; old #van= links still work", () => {
     expect(fromHash("#van=HTNC", known)).toEqual({ ...DEFAULTS, origin: "HTNC" });
   });
 
@@ -95,8 +96,13 @@ describe("state in the URL", () => {
     expect(fromHash("#van=NOPE&overstap=7&max=13&profiel=raket", known)).toEqual(DEFAULTS);
   });
 
-  it("reads /station/<code>", () => {
-    expect(stationFromPath("/station/ut")).toBe("UT");
+  it("reads the station page from the path, and back", () => {
+    expect(stationFromPath("/station/houten-castellum/")).toBe("houten-castellum");
+    expect(stationFromPath("/station/s-hertogenbosch")).toBe("s-hertogenbosch");
+    expect(stationFromPath("/station/")).toBeNull();
+    expect(stationFromPath("/station/UT")).toBeNull(); // old code links are redirected by _redirects
     expect(stationFromPath("/")).toBeNull();
+    expect(pagePath("houten-castellum")).toBe("/station/houten-castellum/");
+    expect(pagePath(null)).toBe("/");
   });
 });
