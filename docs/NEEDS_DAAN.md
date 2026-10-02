@@ -32,6 +32,22 @@ The options from the plan:
 - If NDOV Loket offers a way to fetch the current state, the scheduled job refreshes more often.
 - (b) only makes sense if the warnings need to be fresher than that, and the 2 October silence shows that even (b) can't guarantee it.
 
+**Update 2026-10-02: you have a home server, which makes (b) workable.** How it would work:
+1. **The listener.** A small listener runs on the home server, as a Docker container or a service that restarts by itself. It holds our one connection to the feed. It keeps the state of every lift, resets it with each 04:02 full state, and applies changes as they arrive.
+2. **Publishing.** When something changes (at most every 2 minutes), it uploads `lifts.json` to Cloudflare's key-value store. It only makes outgoing connections, so nothing on your network is exposed.
+3. **Reading.** The site reads `lifts.json` through a tiny Cloudflare function of about 15 lines. That's our only server-side code, a small exception to "no backend" that I'd log in DECISIONS.
+4. **Old or silent data.** `lifts.json` records when the last full state and the last change arrived.
+   - If changes stop, as on 2 October, the site says it shows the status as of 04:02.
+   - If the server is down for more than about 26 hours, the site says the lift status is unknown.
+
+It stays free: the key-value store allows 1,000 updates and 100,000 reads a day. Asking NDOV Loket (c) is still worth it, because of the silence.
+
+To build it I need to know:
+- What does the server run: Linux, a NAS such as Synology, or Windows? Does it have Docker?
+- Is it on day and night?
+- Are you OK with a second Cloudflare key on it that can only write the lift data?
+- Are you OK with the small Cloudflare function?
+
 If you agree with (c), send this to NDOV Loket (contact details on <https://ndovloket.nl>):
 
 > **Onderwerp:** SIRI-FM liftstatus: actuele stand ophalen, en stilte op 2 oktober
