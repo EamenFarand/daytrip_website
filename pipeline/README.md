@@ -49,8 +49,12 @@ Locally, downloads and output live outside the repo, set in `.env` (`STEPFREE_CA
 | `stations.json` | per station: code, name, lat/lon, status (`yes`/`partial`/`no`/`unknown`), per-track status, source and date, in-person verification, corrections, lifts (ID, tracks served) |
 | `origins/<CODE>.json` | `results[day][profile][train_set][dest]` = list of entries for max 0, 1, 2 changes |
 
-Each entry is `[median_min, fastest_min, departures_per_hour, changes, "VIA|VIA"]`, or `null` when there's no journey with that few changes. Trailing entries that repeat the previous one are dropped, so read level *k* as `list[min(k, len - 1)]`.
+Each entry is `[median_min, fastest_min, departures_per_hour, changes, "VIA|VIA", "TRACKS"]`, or `null` when there's no journey with that few changes. Trailing entries that repeat the previous one are dropped, so read level *k* as `list[min(k, len - 1)]`.
+- `VIA` is empty for a direct journey.
+- `TRACKS` are the typical journey's tracks: departure, then arrival and departure at each change, then arrival. `?` means the timetable doesn't say. The site uses them to warn only about lifts on those tracks.
 
-Example: `"ASD": [null, [49, 49, 4.0, 1, "UT"]]` means no direct train; with 1 or more changes it's 49 minutes via Utrecht Centraal, 4 departures an hour.
+Example: `"ASD": [null, [49, 49, 4.0, 1, "UT", "1|20|5|5a"]]` means no direct train. With 1 or more changes it's 49 minutes via Utrecht Centraal (in on track 20, out from 5), arriving on track 5a, with 4 departures an hour.
 
-Size: about 80 KB per origin file (10 KB compressed), 32 MB in total.
+`stations.json` gives each station a `slug` for its page (`/station/<slug>/`), unique and checked by the build. `meta.json` has `inputs`: hashes of the sources, the corrections and the pipeline code. The nightly job compares them with the live build to skip a build when nothing changed (`stepfree.inputs`).
+
+Size: about 110 KB per origin file (about 20 KB compressed), 44 MB in total.

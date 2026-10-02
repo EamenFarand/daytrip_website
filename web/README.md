@@ -29,15 +29,24 @@ All from `/data/` (format in `pipeline/README.md`):
 
 - `meta.json`: build date, the two timetable days, the time window.
 - `stations.json`: every station with its step-free status per track, source, date and lifts.
-- `origins/<CODE>.json`: travel times from one origin (about 10 KB compressed), fetched when that origin is chosen.
-- `lifts.json`: current lift outages. **Optional** until Phase 3 builds it; without it the panel says live lift status is coming. Never write a placeholder "all lifts work" file: no data must look like no data.
+- `origins/<CODE>.json`: travel times from one origin (about 20 KB compressed), fetched when that origin is chosen.
+
+And the live lift status from `/api/lifts`. In production that's `functions/api/lifts.js`, reading what the home-server listener (`lifts/`) writes to Cloudflare KV. Locally, the dev and preview servers serve the file named by `STEPFREE_LIFTS` in `.env`, or 404. No data means "lift status unknown": never write a placeholder "all lifts work".
+
+## Pages
+
+`npm run build:site` builds the app, copies the data, then runs `scripts/pages.ts`. That script writes, from the data:
+- `/station/<slug>/` for every station: its own title, description and canonical URL, and an intro that works without JavaScript. The app on that page starts from that station.
+- `/station/`: all stations as plain links.
+- `404.html`, `sitemap.xml`, and `_redirects` (old `/station/<CODE>` links go to the page).
 
 ## Code
 
 | File | Does |
 |---|---|
 | `src/main.ts` | Wires everything: loads data, keeps the state, renders on change. |
-| `src/state.ts` | The chosen origin and filters, mirrored in the URL hash (`#van=HTNC&overstap=2&max=alles`); defaults are left out. |
+| `src/state.ts` | The chosen origin (in the path, `/station/<slug>/`) and filters (in the hash, `#overstap=2&max=alles`); defaults are left out, and old `#van=` links still work. |
+| `src/lifts.ts` | How fresh the lift status is, and which lifts out matter for a journey (the tracks it uses). |
 | `src/results.ts` | Turns an origin file plus the filters into one verdict per station (reachable, out of reach, not step-free, unknown). |
 | `src/search.ts` | Station search that tolerates typos, accents and shorthand ("Utrecht CS", "A'dam", "Den Bosch"). |
 | `src/combobox.ts` | The search box, following the WAI-ARIA combobox pattern. |
@@ -48,7 +57,7 @@ All from `/data/` (format in `pipeline/README.md`):
 | `src/contact.ts` | The address for error reports, and mailto links with the subject filled in. |
 | `src/colors.ts` | The travel-time colours for light and dark mode. |
 
-`public/_redirects` makes `/station/<code>` serve the app on Cloudflare Pages. The path is reserved for destination pages; for now it opens that station.
+`scripts/pages.ts` writes the pre-rendered pages (see Pages). `public/_headers` sets security headers and caching for Cloudflare Pages.
 
 ## Rules the UI keeps
 

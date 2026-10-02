@@ -9,7 +9,7 @@ on:
     - cron: "10 15 * * *" # catches later updates (NS's IFF came at 13:36 UTC)
   push:
     branches: [main]
-    paths: ["pipeline/**", "web/**", "functions/**", ".github/workflows/deploy.yml"]
+    paths: ["pipeline/**", "web/**", "functions/**", ".github/workflows/deploy.yml", "!**/*.md"] # docs alone need no deploy
   workflow_dispatch:
 
 concurrency:

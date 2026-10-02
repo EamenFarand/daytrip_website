@@ -4,6 +4,49 @@ One entry per non-obvious decision: what, why, and what was rejected. Newest on 
 
 ---
 
+### 2026-10-02 — Lift warnings for the tracks a journey uses
+**What:**
+- The build now records the typical journey's tracks: departure, the arrival and departure at each change, and arrival.
+- The site warns only about lifts that serve one of those tracks.
+- A lift in the hall or at an entrance counts only where you enter or leave the station, not when you change trains.
+- Status "unknown" also gives a warning, with its own wording.
+- The panel no longer shows "buiten gebruik sinds …".
+
+**Why:**
+- With every lift at a station counting, 108 of Houten Castellum's destinations got a warning, mostly because something is always out somewhere at a big station. With track matching it's 28 of 179 within 2 hours, and those are specific, e.g. changing on Amsterdam Centraal tracks 4/5 while ASD-LIF-011 is out.
+- The feed restarts its start date with every nightly full status (Amsterdam's lift that has been out since June 2024 would say "since 2 Oct"), so a "since" date would often be wrong.
+
+**Limitation:** other departures in the window can use other tracks. The warning text says the lift *may* be needed, and the station's full lift list stays visible in the panel.
+**Rejected:** a warning per station for every lift (too noisy to mean anything), and storing the tracks of every departure (much more data).
+
+### 2026-10-02 — Station pages: readable names, the origin in the path
+**What:**
+- Every station has a pre-rendered page at `/station/<slug>/`, e.g. `/station/houten-castellum/`. The slug is made from the name, is unique, and is checked by the build.
+- Old `/station/<CODE>` links redirect (`_redirects`).
+- The app takes the origin from the path and keeps the rest of the choices in the hash, e.g. `/station/utrecht-centraal/#overstap=2`. Choosing another origin moves to that station's path.
+- `/station/` lists all stations without the app, and `/404.html` makes unknown addresses a real 404.
+
+**Why:**
+- Readable addresses are what people search for and share.
+- Station codes (HTNC) mean nothing to visitors.
+- A single page with the state after `#` is one page to a search engine.
+
+**Rejected:** code-based paths, and generating pages per origin *and* filter (too many near-duplicate pages).
+
+### 2026-10-02 — Build and deploy: GitHub Actions to Cloudflare Pages, only when something changed
+**What:**
+- `deploy.yml` runs at 05:40 UTC, after OVapi's timetable (about 05:15), and again at 15:10 UTC. It also runs on every push to main, and can be started by hand.
+- On the schedule, it first compares the inputs with the live build's `meta.json` and stops if nothing changed and no timetable day has passed. The inputs are hashes of the GTFS, EPIAP and IFF files, the corrections file and the pipeline code.
+- The run then builds (validated), runs the tests against the real build, builds the site, publishes with `wrangler pages deploy`, and checks that the live site serves the new build.
+- Downloads are cached between runs, so the requests stay conditional.
+- Any failure stops the run before publishing, so the last good deployment stays live. Cloudflare keeps every deployment, so rolling back is a click.
+
+**Why:** It's free (public repo), it's boring, and it's polite to the sources: about four requests a run when nothing changed.
+
+**Also:** the build's worker processes now start with "spawn" on every platform. On Linux the default "fork" deadlocked with polars, and the first CI build hung.
+
+**Rejected:** Cloudflare's own Git-connected builds. They can't run a Python pipeline with 240 MB of downloads well within their build limits, and they'd download everything on every build.
+
 ### 2026-10-02 — Softer dark mode (Daan)
 **What:** The site still follows the device's light/dark setting, but dark mode now uses soft greys instead of near-black.
 - Page #262625, panels #2f2f2d, text #ececea instead of pure white.

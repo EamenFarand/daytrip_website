@@ -6,30 +6,45 @@ Everything that needs you, batched. Open items first; answered items are kept at
 
 ## Open
 
-### 1. Go for Phase 3 *(blocks Phase 3)*
+The site is live at **<https://trapvrij.pages.dev>** (Phase 3 in progress). Items 1–3 are what's left from you for v1: the domain, DNSSEC and the lift listener.
 
-Everything Phase 3 needs from you is in place and checked (see "Answered" below). The nameserver change doesn't block it: the site goes live on a free `*.pages.dev` address first, and `trapvrij.nl` is connected near the end. Reply "go" to start Phase 3 as described in [PLAN.md](PLAN.md).
+### 1. Connect trapvrij.nl to the site *(two clicks; needed for the launch)*
 
-### 2. Point trapvrij.nl at Cloudflare *(in progress; needed before launch on the domain)*
+The DNS switch worked: on 2 Oct at 21:40 every public DNS server answered with Cloudflare's nameservers. The deploy key can only deploy, not change DNS (on purpose), so connect the domain in the dashboard:
 
-**Done, and checked on 2 Oct at 20:40.** The .nl registry lists Cloudflare's nameservers (`ashley` and `vick.ns.cloudflare.com`) and DNSSEC is off, so you did it in the right order. Cloudflare's nameservers already answer for the domain. Public DNS servers still had TransIP's answers cached; those expire on their own, usually within an hour.
+1. In Cloudflare, open *Workers & Pages → trapvrij → Custom domains → Set up a custom domain*.
+2. Enter `trapvrij.nl`, then *Continue → Activate domain*. Cloudflare adds the DNS record itself.
+3. Do the same for `www.trapvrij.nl`.
+4. Optional but neat: make www go to the main address. Go to *trapvrij.nl → Rules → Redirect Rules → Create rule*, choose the template *Redirect from WWW to root*, and deploy.
+5. Tell me when it's done. I'll switch the deploy's checks to `https://trapvrij.nl` and check the site there.
 
-Still to do:
-1. **Wait until Cloudflare says the domain is active.** Cloudflare emails you; the dashboard also has a button to check the nameservers again.
-2. **Turn DNSSEC back on, now via Cloudflare:**
-   1. In Cloudflare, go to *DNS → Settings → DNSSEC → Enable*. Cloudflare shows the key details.
-   2. At TransIP, turn DNSSEC on for external nameservers and copy those details over. For .nl, TransIP may ask for the public key (flags 257, algorithm 13) rather than the DS record. If its form is unclear, send me a screenshot of it (no secrets in it).
-3. **Don't add any records for the site yourself.** In Phase 3 I'll connect the domain to the site with the deploy key.
+If Cloudflare says the domain isn't active yet, wait for its "active" email and try again.
 
-### 3. Phase 3, when I ask: set up the lift listener on your home server
+### 2. Turn DNSSEC back on, now via Cloudflare *(any time after the domain is active)*
 
-Decided: option (b), the listener on your home server (see DECISIONS.md, 2026-10-02). Nothing to do yet. When Phase 3 gets there, I'll add the code (`lifts/`) with a compose file and exact install commands, and ask you to:
-1. In Cloudflare, create a key-value store (*Storage & Databases → KV → Create*, or under *Workers & Pages*) named `trapvrij-lifts`. Tell me its ID; that ID isn't secret.
-2. Create the second key:
+1. In Cloudflare, go to *trapvrij.nl → DNS → Settings → DNSSEC → Enable*. Cloudflare shows the key details.
+2. At TransIP, turn DNSSEC on for external nameservers and copy those details over. For .nl, TransIP may ask for the public key (flags 257, algorithm 13) rather than the DS record. If its form is unclear, send me a screenshot of it (no secrets in it).
+
+### 3. Run the lift listener on your home server
+
+The code is ready: [lifts/README.md](../lifts/README.md). CI checks that its Docker image builds. Until it runs, the site says the lift status is unknown.
+
+1. **Create the store.** In Cloudflare, go to *Storage & Databases → KV → Create* (or find it under *Workers & Pages*). Name it `trapvrij-lifts`, and copy its **ID**.
+2. **Create the second key:**
    1. Go to *My Profile → API Tokens → Create Token → Create Custom Token*, and name it `trapvrij-lifts-writer`.
    2. Permission: *Account · Workers KV Storage · Edit*. Account resources: your account.
-   3. Copy the token. It goes only into an env file on your server, never into GitHub or this chat.
-3. On the server, clone the repo, put the account ID, store ID and key in `lifts/.env`, and run `docker compose up -d`.
+   3. Click *Continue to summary → Create Token*, and copy the token. It goes only into the env file on your server, never into GitHub or this chat.
+3. **Tell me the store's ID.** It isn't secret. I'll connect the store to the site.
+4. **On the server:**
+   ```bash
+   git clone https://github.com/EamenFarand/daytrip_website.git trapvrij
+   cd trapvrij/lifts
+   cp .env.example .env
+   nano .env               # account ID, store ID and the key from step 2
+   docker compose up -d --build
+   docker compose logs -f  # Ctrl+C stops watching; it keeps running
+   ```
+   You should see `connected to tcp://pubsub.besteffort.ndovloket.nl:7666`. Until about 04:02 the next night it logs `not publishing: no full state yet`; that's expected. After that it logs `published: … lifts out` about every 10 minutes.
 
 ### 4. Optional: send NDOV Loket two questions
 
@@ -107,4 +122,5 @@ Reporting them helps everyone who uses this data (the NS app, 9292…). If you w
   - Checked with the workflow *Check Cloudflare secrets*: the token is an active user token, and it may manage Pages in the account (0 projects so far).
   - Re-run that workflow from the Actions tab whenever you replace the token.
 - **2026-10-02, live lift status:** option (b), a listener in Docker on Daan's home server (Linux, always on). A second Cloudflare key and the small Cloudflare function are fine. Logged in DECISIONS.md; PLAN.md and CLAUDE.md updated. Setup steps come in Phase 3 (item 3).
+- **2026-10-02, Phase 3:** go (after the softer dark mode).
 - **2026-10-02, lift logger:** stopped after 71 hours with all three nightly snapshots, and analysed (audit/REPORT.md Q5). The log moved out of Nextcloud to the cache folder.
