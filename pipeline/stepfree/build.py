@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import multiprocessing
 import os
 import re
 import shutil
@@ -79,7 +80,9 @@ def main(argv: list[str] | None = None) -> None:
 
     combos = [(d, s, timetables[d], stations, transfer_minutes, set(args.only or [])) for d in DAY_TYPES for s in TRAIN_SETS]
     results: dict[str, dict] = {}
-    with ProcessPoolExecutor(max_workers=args.workers) as pool:
+    # "spawn", not Linux's default "fork": a forked child inherits polars' thread pool mid-use
+    # and can deadlock (the first CI build hung). Windows always spawns.
+    with ProcessPoolExecutor(max_workers=args.workers, mp_context=multiprocessing.get_context("spawn")) as pool:
         for day_type, train_set, out in pool.map(_run_combo, combos):
             for code, per_profile in out.items():
                 for prof_name, dests in per_profile.items():

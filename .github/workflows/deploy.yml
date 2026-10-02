@@ -25,6 +25,7 @@ env:
   STEPFREE_SITE: ${{ github.workspace }}/site
   PAGES_PROJECT: trapvrij
   SITE_URL: https://trapvrij.pages.dev
+  PYTHONUNBUFFERED: "1" # progress shows up in the log as it happens
 
 jobs:
   build-deploy:
@@ -65,6 +66,7 @@ jobs:
 
       - name: Build the data (validated before it's kept)
         if: steps.check.outputs.build == 'true'
+        timeout-minutes: 20 # about 3 minutes normally; fail fast if it hangs
         working-directory: pipeline
         run: uv run python -m stepfree.build
 
