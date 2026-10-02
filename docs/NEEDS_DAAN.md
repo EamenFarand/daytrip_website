@@ -100,6 +100,7 @@ Reporting them helps everyone who uses this data (the NS app, 9292…). If you w
   1. In the Nextcloud desktop client: *Settings → Edit Ignored Files*.
   2. Add three lines: `.git`, `node_modules` and `.venv`. Each pattern matches that folder name anywhere.
   3. Copies already on the Nextcloud server stay there. Delete them on the server (web interface) only if you need the space, and only once the client shows the folders as ignored. Otherwise the deletion could sync back to your PC.
+- **If GitHub emails that "Build and deploy" was disabled:** GitHub pauses scheduled workflows in a public repo after 60 days without new commits. To restart it, open the repo's *Actions* tab, choose *Build and deploy*, and click *Enable workflow*. Until then the site keeps working, but with the data from the last build.
 - **The GitHub repo is public**, and commit author emails are visible. Fine as is; if you'd rather use GitHub's no-reply address, send it to me and I'll switch.
 
 ---
