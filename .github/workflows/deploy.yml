@@ -42,7 +42,7 @@ jobs:
           key: sources-${{ github.run_id }}
           restore-keys: sources-
 
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.2.0 # this action has no major-version tag
 
       - name: Install the pipeline
         working-directory: pipeline
