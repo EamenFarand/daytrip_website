@@ -56,10 +56,38 @@ Verify current URLs, formats, licences and access requirements yourself; don't t
 - Reserve `/station/{code}` URLs for the destination pages that come later.
 
 ## Phase 3 — Pipeline and launch
-- GitHub Actions: nightly rebuild when the GTFS feed has changed. Lift status fetched more often (e.g. hourly) into a small separate `lifts.json`, shown in the frontend as warnings.
+*Expanded on 2026-10-01 after Daan's Phase 2 review: live lift status, station pages and housekeeping were added.*
+
+- GitHub Actions: nightly rebuild when the GTFS feed has changed. Run the pipeline and web tests in CI.
 - A failing pipeline must never publish broken data: validate outputs, keep the last good build.
 - Deploy to Cloudflare Pages. Domain → NEEDS_DAAN.
 - About page: what it is, how it works, sources and licences, how to report an error (an email link is fine for v1).
+
+### Live lift status
+- **Where the listener runs.** The SIRI-FM feed is a push stream: changes as they happen, plus one full snapshot a day. A short scheduled GitHub Actions job can therefore be up to 24 hours out of date. Decide after analysing the lift log (`audit/lift_listener.py`, running until 2 Oct). Compare at least:
+  - (a) a scheduled job that catches the daily snapshot;
+  - (b) an always-on listener on Daan's home server that publishes `lifts.json`. It's free, but depends on that machine being up;
+  - (c) asking NDOV Loket whether a pull or snapshot endpoint exists.
+
+  Put a recommendation in NEEDS_DAAN; Daan decides. Log the decision in DECISIONS.md.
+- **Warn on the whole journey, not only the clicked station.** For a journey, check lifts at the origin, every transfer station and the destination. Where possible, only check the lifts serving the platforms used (EPIAP links lifts to tracks). If the build doesn't store platforms per journey, warn per station for now.
+  - Show the warning in the station panel, next to the station in "Overstappen in", and on the list entry.
+  - A transfer station must never read as plain "drempelvrij" while a lift that may serve the journey is out of order.
+- **Stale data looks like no data.** `lifts.json` records when its last full snapshot arrived. If that is more than about 26 hours ago, the site says lift status is unknown instead of showing no warnings. Validate `lifts.json` before publishing it, like the build. Never publish an empty or placeholder file (see DECISIONS, 2026-09-29).
+
+### Station pages (findability)
+- **Why:** the site is one page with its state after the `#`, so search engines see a single page. Most visitors will arrive from searches like "kinderwagen trein Houten", and so will any later revenue.
+- At build time, generate a static, pre-rendered HTML page per station under `/station/…`. Choose between the code and a readable slug (e.g. `/station/houten-castellum`), and log the choice. Each page has:
+  - its own title and meta description, e.g. "Met de kinderwagen vanaf Houten Castellum";
+  - the station's step-free status and lifts;
+  - a short summary of the stations reachable from it with a pram, within 30 and 60 minutes;
+  - the interactive map loading on top, with that station as the origin.
+- The pages make sense without JavaScript. Keep Lighthouse accessibility and SEO at ≥ 95 on a sample of them.
+- Add `sitemap.xml` and canonical URLs. robots.txt allows the pages and keeps `/data/` disallowed.
+- All text is generated from the data by plain code, with no AI at runtime (principle 2). Editorial "what to do here" content stays out of v1.
+
+### Housekeeping
+- NEEDS_DAAN item 8 only says to exclude `.git` from Nextcloud. About 500 MB of `node_modules` and `.venv` folders also sit inside the project and sync. Correct the item: exclude `node_modules` and `.venv` too.
 
 ## v1 definition of done
 - Live on its own domain; any rail station works as an origin.
@@ -67,6 +95,8 @@ Verify current URLs, formats, licences and access requirements yourself; don't t
 - Nightly pipeline green for 7 consecutive days.
 - Attribution, disclaimer and about page in place.
 - Lighthouse accessibility score ≥ 95.
+- Every station has its own pre-rendered page, listed in the sitemap.
+- Lift warnings cover the origin, transfer stations and destination, and stale lift data shows as unknown.
 
 ## Not in v1
-Wheelchair mode (needs train-type and boarding-gap data), rerouting around live lift outages (v1 only warns), destination "what to do here" pages, user accounts, any backend, bus/tram/metro legs, monetisation.
+Wheelchair mode (needs train-type and boarding-gap data), rerouting around live lift outages (v1 only warns), editorial "what to do here" content on station pages, user accounts, any backend, bus/tram/metro legs, monetisation.
