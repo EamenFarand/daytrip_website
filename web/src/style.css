@@ -23,22 +23,23 @@
 }
 
 @media (prefers-color-scheme: dark) {
+  /* soft greys rather than black (Daan, 2026-10-02); every pair checked for contrast */
   :root {
     color-scheme: dark;
-    --page: #0d0d0d;
-    --surface: #1a1a19;
-    --ink: #ffffff;
-    --ink-2: #c3c2b7;
-    --muted: #b1b0a6;
-    --line: #3a3a37;
+    --page: #262625;
+    --surface: #2f2f2d;
+    --ink: #ececea;
+    --ink-2: #c6c5be;
+    --muted: #aeada6;
+    --line: #4a4a47;
     --accent: #86b6ef;
     --accent-ink: #0b0b0b;
     --focus: #86b6ef;
     --good: #4cc24c;
     --bad: #f28b82;
-    --unknown: #b1b0a6;
-    --mark-soft: #898781;
-    --shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    --unknown: #aeada6;
+    --mark-soft: #8b8a84;
+    --shadow: 0 1px 3px rgba(0, 0, 0, 0.4);
   }
 }
 

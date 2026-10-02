@@ -4,6 +4,18 @@ One entry per non-obvious decision: what, why, and what was rejected. Newest on 
 
 ---
 
+### 2026-10-02 — Softer dark mode (Daan)
+**What:** The site still follows the device's light/dark setting, but dark mode now uses soft greys instead of near-black.
+- Page #262625, panels #2f2f2d, text #ececea instead of pure white.
+- The dark base map is near-black. In code, every one of its colours is mixed 12.5% toward white, which makes its background #2a2a2a.
+- On that lighter map the slowest travel-time blue was too faint (2.7:1). The dark ramp now starts lighter: `#e1edfd → #2a78d6`. It passes the dataviz ordinal checks, and every step reaches at least 3:1 on the map and in the legend.
+
+**Why:** Daan found the dark version too dark. Following the device's setting stays, because people choose dark mode for a reason.
+
+**Rejected:**
+- A light/dark switch on the page: remembering the choice would need browser storage.
+- OpenFreeMap's blue-grey "fiord" style: our blue dots would sit on a blue-ish map.
+
 ### 2026-10-02 — Live lift status from a listener on Daan's home server (Daan: option b)
 **What:**
 - **The listener.** A small listener runs in Docker on Daan's home server (Linux, always on). It holds our one connection to the SIRI-FM feed. It keeps the state of every lift, resets it with each 04:02 full state, and applies changes as they arrive.

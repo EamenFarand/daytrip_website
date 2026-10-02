@@ -7,7 +7,7 @@ import "maplibre-gl/dist/maplibre-gl.css";
 // MapLibre looks for its worker next to its own file, which a bundler moves; let Vite bundle it instead.
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 
-import { RAMP } from "./colors";
+import { RAMP, liftColor } from "./colors";
 import { ACCESS_TEXT, changes, duration } from "./format";
 import type { Verdict } from "./results";
 
@@ -17,8 +17,24 @@ const FONT = ["Noto Sans Regular"];
 
 const INK = {
   light: { ink: "#0b0b0b", surface: "#ffffff", muted: "#6b6a66", soft: "#898781" },
-  dark: { ink: "#ffffff", surface: "#1a1a19", muted: "#c3c2b7", soft: "#898781" },
+  dark: { ink: "#ececea", surface: "#2a2a2a", muted: "#aeada6", soft: "#8b8a84" }, // surface = the softened map
 };
+
+// The dark base map is near-black; every colour in it is lifted this far toward white,
+// which turns its background (rgb 12,12,12) into #2a2a2a and keeps the relations between colours.
+const DARK_LIFT = 0.125;
+
+/** Softer dark map: soft greys instead of near-black (Daan, 2026-10-02). */
+function soften(map: maplibregl.Map): void {
+  for (const layer of map.getStyle().layers) {
+    const paint = ("paint" in layer ? layer.paint : undefined) as Record<string, unknown> | undefined;
+    type Property = Parameters<typeof map.setPaintProperty>[1];
+    type Value = Parameters<typeof map.setPaintProperty>[2];
+    for (const [key, value] of Object.entries(paint ?? {})) {
+      if (key.endsWith("color")) map.setPaintProperty(layer.id, key as Property, liftColor(value, DARK_LIFT) as Value);
+    }
+  }
+}
 
 const LOCALE = {
   "Map.Title": "Kaart met bereikbare stations",
@@ -182,6 +198,7 @@ export class StationMap {
   private install(): void {
     const map = this.map;
     if (!map) return;
+    if (this.theme === "dark") soften(map); // before our own layers are added
     for (const kind of ["out", "no", "unknown", "origin", "idle"] as const) {
       const name = `icon-${kind}`;
       if (map.hasImage(name)) map.removeImage(name);
