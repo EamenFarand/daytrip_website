@@ -4,6 +4,27 @@ One entry per non-obvious decision: what, why, and what was rejected. Newest on 
 
 ---
 
+### 2026-10-02 — Live lift status from a listener on Daan's home server (Daan: option b)
+**What:**
+- **The listener.** A small listener runs in Docker on Daan's home server (Linux, always on). It holds our one connection to the SIRI-FM feed. It keeps the state of every lift, resets it with each 04:02 full state, and applies changes as they arrive.
+- **Publishing.** When something changes, at most every 2 minutes, it writes `lifts.json` to Cloudflare Workers KV. It uses a second Cloudflare key that can only edit KV. The server makes outgoing connections only.
+- **Reading.** The site reads `lifts.json` through a tiny, read-only Cloudflare Pages Function. That's the only server-side code, a deliberate exception to "no backend".
+- **Freshness.** `lifts.json` says when the last full state and the last status message arrived.
+  - If there's been no message for about 30 minutes, the site says it shows the status as of 04:02.
+  - If the full state is more than about 26 hours old, the site says the lift status is unknown.
+
+**Why:**
+- Warnings are minutes old instead of up to a day. A once-a-day state would miss 3–6 lifts that are out at any moment (REPORT Q5).
+- The server already runs day and night, so this costs nothing. KV's free tier allows 1,000 writes and 100,000 reads a day.
+- If the server goes down, the last state stays in KV and visibly ages to "unknown". It never turns into "all lifts work".
+
+**Rejected:**
+- (a) Only the nightly snapshot, from GitHub Actions: up to a day old.
+- Serving `lifts.json` straight from the home server, e.g. through a Cloudflare Tunnel: every visit would then depend on the server and the home connection.
+- A listener made of back-to-back GitHub Actions jobs: Actions is meant for building and publishing, not for hosting a service.
+
+The NDOV Loket question (c) still stands: on 2 Oct the change stream was silent for more than 19 hours, and even an always-on listener can't fix that.
+
 ### 2026-10-02 — Name: Trapvrij, on trapvrij.nl (Daan)
 **What:**
 - The product is called **Trapvrij**. The domain `trapvrij.nl` is registered at TransIP.

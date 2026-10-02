@@ -64,16 +64,17 @@ Verify current URLs, formats, licences and access requirements yourself; don't t
 - About page: what it is, how it works, sources and licences, how to report an error (an email link is fine for v1).
 
 ### Live lift status
-- **Where the listener runs.** The SIRI-FM feed is a push stream: changes as they happen, plus one full snapshot a day. A short scheduled GitHub Actions job can therefore be up to 24 hours out of date. Decide after analysing the lift log (`audit/lift_listener.py`, running until 2 Oct). Compare at least:
-  - (a) a scheduled job that catches the daily snapshot;
-  - (b) an always-on listener on Daan's home server that publishes `lifts.json`. It's free, but depends on that machine being up;
-  - (c) asking NDOV Loket whether a pull or snapshot endpoint exists.
-
-  Put a recommendation in NEEDS_DAAN; Daan decides. Log the decision in DECISIONS.md.
+- **Where the listener runs: on Daan's home server.** Decided on 2026-10-02, option (b), after the lift-log analysis in `audit/REPORT.md` Q5. See DECISIONS.md.
+  - The SIRI-FM feed is a push stream: changes as they happen, plus a full snapshot every night at 04:02.
+  - A listener in a Docker container on the home server (Linux, always on) holds our one connection to the feed. It keeps the state of every lift, resets it with each 04:02 full state, and applies changes as they arrive.
+  - When something changes, at most every 2 minutes, it writes `lifts.json` to Cloudflare Workers KV. It uses a second Cloudflare key that can only edit KV, and makes outgoing connections only.
+  - The site reads `lifts.json` through a tiny, read-only Cloudflare Pages Function, cached for about a minute. That's our only server-side code.
+  - The code lives in the repo, in `lifts/`: the listener, a Dockerfile, a compose file and install steps. Daan runs it on the server.
+  - Also ask NDOV Loket (option c) for a pull endpoint and about 2 Oct, when the change stream stayed silent for more than 19 hours.
 - **Warn on the whole journey, not only the clicked station.** For a journey, check lifts at the origin, every transfer station and the destination. Where possible, only check the lifts serving the platforms used (EPIAP links lifts to tracks). If the build doesn't store platforms per journey, warn per station for now.
   - Show the warning in the station panel, next to the station in "Overstappen in", and on the list entry.
   - A transfer station must never read as plain "drempelvrij" while a lift that may serve the journey is out of order.
-- **Stale data looks like no data.** `lifts.json` records when its last full snapshot arrived. If that is more than about 26 hours ago, the site says lift status is unknown instead of showing no warnings. Validate `lifts.json` before publishing it, like the build. Never publish an empty or placeholder file (see DECISIONS, 2026-09-29).
+- **Stale data looks like no data.** `lifts.json` records when its last full snapshot arrived. If that is more than about 26 hours ago, the site says lift status is unknown instead of showing no warnings. It also records when the last status message arrived. Two lifts normally resend every 5 minutes, so after about 30 minutes without any, the site says it shows the status of the last full snapshot. Validate `lifts.json` before publishing it, like the build. Never publish an empty or placeholder file (see DECISIONS, 2026-09-29).
 
 ### Station pages (findability)
 - **Why:** the site is one page with its state after the `#`, so search engines see a single page. Most visitors will arrive from searches like "kinderwagen trein Houten", and so will any later revenue.
@@ -99,4 +100,4 @@ Verify current URLs, formats, licences and access requirements yourself; don't t
 - Lift warnings cover the origin, transfer stations and destination, and stale lift data shows as unknown.
 
 ## Not in v1
-Wheelchair mode (needs train-type and boarding-gap data), rerouting around live lift outages (v1 only warns), editorial "what to do here" content on station pages, user accounts, any backend, bus/tram/metro legs, monetisation.
+Wheelchair mode (needs train-type and boarding-gap data), rerouting around live lift outages (v1 only warns), editorial "what to do here" content on station pages, user accounts, any backend (apart from the home-server lift listener and the small function that serves its data), bus/tram/metro legs, monetisation.

@@ -20,11 +20,13 @@ Daan owns this project. He does only what an AI can't: create accounts, supply A
 - Data pipeline: Python 3.12, `uv`, pandas or polars, pytest
 - Frontend: static site — Vite + TypeScript + MapLibre GL JS
 - Hosting: Cloudflare Pages. Scheduled jobs: GitHub Actions
-- Secrets: `.env` locally (git-ignored), GitHub Actions secrets in CI. Never commit keys.
+- Live lift status: a Docker listener on Daan's always-on Linux home server writes to Cloudflare Workers KV, and a tiny read-only Pages Function serves it (see DECISIONS.md, 2026-10-02)
+- Secrets: `.env` locally (git-ignored), GitHub Actions secrets in CI, an env file on the home server. Never commit keys.
 
 ## Layout
 - `pipeline/` — fetching, cleaning, routing, precompute
 - `web/` — frontend
+- `lifts/` — the lift-status listener for the home server (Phase 3)
 - `data/raw/` (git-ignored) and `data/build/` (what the site loads)
 - `audit/` — Phase 0 data audit
 - `docs/` — PLAN.md, STATUS.md, DECISIONS.md, NEEDS_DAAN.md

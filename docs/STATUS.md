@@ -3,11 +3,15 @@
 *Last updated: 2026-10-02 (session 3)*
 
 ## Where we are
-**Phases 0–2 are done, and the launch setup is in place and checked.** We're waiting for Daan's go for Phase 3 and his choice on live lift status (NEEDS_DAAN 1–2).
-- **Name and domain:** *Trapvrij* on `trapvrij.nl`, registered at TransIP (active, DNSSEC on). The site and docs use the name. Before launch on the domain, its DNS moves to Cloudflare (NEEDS_DAAN 3).
+**Phases 0–2 are done, and the launch setup is in place and checked.** We're waiting only for Daan's go for Phase 3 (NEEDS_DAAN 1).
+- **Name and domain:** *Trapvrij* on `trapvrij.nl`, registered at TransIP. The site and docs use the name.
+  - On 2 Oct Daan moved the nameservers to Cloudflare, with DNSSEC off first. Cloudflare answers for the zone.
+  - Left: Cloudflare marks the zone active, then DNSSEC goes back on via Cloudflare (NEEDS_DAAN 2).
+  - This doesn't block Phase 3: the site launches on `*.pages.dev` first.
+- **Live lift status, decided:** a Docker listener on Daan's home server writes to Cloudflare KV, and a tiny Pages Function serves it. See DECISIONS 2026-10-02 and PLAN Phase 3; Daan's setup steps are in NEEDS_DAAN 3.
 - **Error reports** go to deonw_W@hotmail.com: on the about page, plus a "Meld het" link in each station panel with the station in the subject.
 - **Cloudflare:** both deploy secrets are set in GitHub and verified by the workflow *Check Cloudflare secrets*: an active token with Pages access, 0 projects so far.
-- **PLAN.md** was expanded by Daan on 2026-10-01: live lift status, pre-rendered station pages, and a housekeeping item (now corrected in NEEDS_DAAN 7).
+- **PLAN.md** was expanded by Daan on 2026-10-01: live lift status, pre-rendered station pages, and a housekeeping item (now corrected in NEEDS_DAAN 8).
 
 ## Done
 - **Phase 0**: data audit, verdict Go. See `audit/REPORT.md`.
@@ -48,19 +52,21 @@
 The 72-hour log is done; it's in `<cache>/lifts/` (moved out of Nextcloud). See `audit/REPORT.md` Q5 and `audit/lift_analysis.py`.
 - The full state of all 443 lifts arrives every night at 04:02. Changes are pushed within minutes, about 200 real ones a day.
 - The change stream went silent on 2 Oct after 00:55 and was still silent at 20:28, while heartbeats continued.
-- My recommendation: catch the 04:02 state in the nightly job, and ask NDOV Loket for a pull endpoint. Daan decides (NEEDS_DAAN 2).
+- Daan chose the home-server listener (option b). Asking NDOV Loket about the silence is optional (NEEDS_DAAN 4).
 
 ## Next step
-1. Daan's go for Phase 3 and his lift choice (NEEDS_DAAN 1–2).
+1. Daan's go for Phase 3 (NEEDS_DAAN 1).
 2. **Phase 3** (see PLAN.md):
    - A GitHub Actions nightly job: fetch with conditional GET, build only if the feeds changed, validate, deploy with `wrangler pages deploy`. Keep the last good build when validation fails. Run the pipeline and web tests in CI.
-   - Lift status into `lifts.json`, per Daan's choice:
-     - it records when the last full state arrived, and older than about 26 hours shows as unknown;
-     - it's validated before publishing;
-     - there's never a placeholder file.
+   - Lift status, the `lifts/` listener for Daan's home server:
+     - Python, Docker and compose. It resets on the 04:02 full state and applies changes.
+     - It writes `lifts.json` to KV, validated, when something changes (at most every 2 minutes). Never a placeholder file.
+     - A read-only Pages Function serves it.
+     - The site falls back to "status as of 04:02" after about 30 minutes without messages, and to "unknown" when the last full state is more than about 26 hours old.
+     - Daan then creates the KV store and its key, and runs the container (NEEDS_DAAN 3).
    - Lift warnings on the whole journey: origin, transfers and destination.
    - Pre-rendered station pages, `sitemap.xml`, canonical URLs.
-   - Connect `trapvrij.nl` once its DNS is at Cloudflare (NEEDS_DAAN 3).
+   - Connect `trapvrij.nl` once Cloudflare has activated the zone (NEEDS_DAAN 2).
    - Mind two GitHub limits: scheduled workflows in a public repo pause after 60 days without repo activity, and `ubuntu-latest` moves to Ubuntu 26 from 19 Oct 2026.
 3. When the NS API key arrives: `cd pipeline && uv run python -m stepfree.ns_check`. Investigate any route off by more than 5 min.
 
