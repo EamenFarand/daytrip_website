@@ -1,0 +1,48 @@
+# Checks the Cloudflare deploy secrets without deploying anything.
+# Run it from the Actions tab ("Run workflow"), or `gh workflow run check-cloudflare.yml`,
+# after creating or replacing the token. GitHub hides secret values in the log.
+name: Check Cloudflare secrets
+
+on:
+  workflow_dispatch:
+
+permissions: {}
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    env:
+      TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      API: https://api.cloudflare.com/client/v4
+    steps:
+      - name: Both secrets are set
+        run: |
+          test -n "$TOKEN" || { echo "::error::CLOUDFLARE_API_TOKEN is missing or empty"; exit 1; }
+          test -n "$ACCOUNT" || { echo "::error::CLOUDFLARE_ACCOUNT_ID is missing or empty"; exit 1; }
+          [[ "$ACCOUNT" =~ ^[0-9a-f]{32}$ ]] || { echo "::error::CLOUDFLARE_ACCOUNT_ID is not 32 hex characters"; exit 1; }
+          echo "both set; the account ID has the right shape"
+
+      - name: The token is valid and active
+        run: |
+          # made under My Profile = a user token; under Manage Account = an account token
+          for kind in user account; do
+            url="$API/user/tokens/verify"
+            [ "$kind" = account ] && url="$API/accounts/$ACCOUNT/tokens/verify"
+            status=$(curl -sS -H "Authorization: Bearer $TOKEN" "$url" | jq -r 'if .success then .result.status else "" end')
+            if [ -n "$status" ]; then
+              echo "$kind token, status: $status"
+              [ "$status" = active ] && exit 0
+              echo "::error::the token exists but is $status"; exit 1
+            fi
+          done
+          echo "::error::Cloudflare doesn't accept the token"; exit 1
+
+      - name: The token may manage Pages in this account
+        run: |
+          r=$(curl -sS -H "Authorization: Bearer $TOKEN" "$API/accounts/$ACCOUNT/pages/projects")
+          if [ "$(echo "$r" | jq -r .success)" != true ]; then
+            echo "::error::can't list Pages projects: $(echo "$r" | jq -c '[.errors[]?.message]')"; exit 1
+          fi
+          echo "Pages projects in this account: $(echo "$r" | jq '.result | length')"
