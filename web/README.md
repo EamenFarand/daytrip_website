@@ -64,7 +64,7 @@ And the live lift status from `/api/lifts`. In production that's `functions/api/
 - **Never colour alone.** Travel time is a blue ramp of five bands; the other states have their own shapes, and the legend and list say everything in words.
 - **Unknown is not step-free.** With a pram, stations with unknown access are shown as such and never counted as reachable.
 - **The list works without the map.** If the tiles or WebGL fail, a note replaces the map.
-- **No cookies, no storage, no tracking.** State lives in the URL only. The tiles (OpenFreeMap) set no cookies either.
+- **No cookies, no storage.** State lives in the URL only. The tiles (OpenFreeMap) set no cookies either. Visits are counted anonymously with Cloudflare Web Analytics, which sets no cookies either; the footer says so. Cloudflare adds its script itself, so there's no code for it here.
 - **Dutch UI**, code and comments in English.
 
 ## Accessibility checks

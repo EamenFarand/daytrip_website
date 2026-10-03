@@ -146,7 +146,7 @@ function staticPage(template: string, o: { title: string; description: string; u
     <main class="page">
 ${o.body}
     </main>
-    <footer class="foot"><p>Geen cookies, geen tracking. Niet verbonden aan NS of ProRail. <a href="/station/">Alle stations</a></p></footer>
+    <footer class="foot"><p>Geen cookies. We tellen bezoeken anoniem met Cloudflare Web Analytics. Niet verbonden aan NS of ProRail. <a href="/station/">Alle stations</a></p></footer>
   </body>
 </html>
 `;

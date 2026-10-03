@@ -4,6 +4,15 @@ One entry per non-obvious decision: what, why, and what was rejected. Newest on 
 
 ---
 
+### 2026-10-03 — Visits counted with Cloudflare Web Analytics
+**What:** Daan's choice. Visits are counted with Cloudflare Web Analytics, and every page's footer says so: "Geen cookies. We tellen bezoeken anoniem met Cloudflare Web Analytics." It said "Geen cookies, geen tracking." Cloudflare adds its script to the pages itself once Web Analytics is on for the Pages project, so there's no code for it in the repo.
+
+**Why:**
+- The plan allows cookieless analytics at most (PLAN.md, Phase 2). This sets no cookies and uses no browser storage, so there's still no cookie banner.
+- It's free, and Cloudflare already serves the site, so no new party sees the visits.
+
+**Rejected:** Google Analytics and the like (cookies, a consent banner, one more party); a self-hosted counter (one more service to run and keep up).
+
 ### 2026-10-02 — Lift warnings for the tracks a journey uses
 **What:**
 - The build now records the typical journey's tracks: departure, the arrival and departure at each change, and arrival.
