@@ -1,0 +1,10 @@
+# Cloudflare Pages settings, used by `wrangler pages deploy` in .github/workflows/deploy.yml.
+# LIFTS: the KV store the lift listener on Daan's home server (lifts/) writes to, and that
+# functions/api/lifts.js reads. The store's ID isn't secret; the listener's key is (it stays on the server).
+name = "trapvrij"
+pages_build_output_dir = "site"
+compatibility_date = "2026-10-01"
+
+[[kv_namespaces]]
+binding = "LIFTS"
+id = "ca2785c8bb504732956dcdc1990981e1"
