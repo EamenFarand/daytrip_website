@@ -129,9 +129,6 @@ Reporting them helps everyone who uses this data (the NS app, 9292…). If you w
   3. Copies already on the Nextcloud server stay there. Delete them on the server (web interface) only if you need the space, and only once the client shows the folders as ignored. Otherwise the deletion could sync back to your PC.
 - **If GitHub emails that "Build and deploy" was disabled:** GitHub pauses scheduled workflows in a public repo after 60 days without new commits. To restart it, open the repo's *Actions* tab, choose *Build and deploy*, and click *Enable workflow*. Until then the site keeps working, but with the data from the last build.
 - **Optional, one click: Bing.** At <https://www.bing.com/webmasters>, choose *Import from Google Search Console*. That covers Bing, DuckDuckGo and Ecosia as well.
-- **Optional: GitHub email privacy.** New commits from this project already use your GitHub no-reply address. To cover the rest too: on GitHub, open *Settings → Emails* and tick
-  - *Keep my email addresses private*: commits you make on github.com itself then use the no-reply address as well;
-  - *Block command line pushes that expose my email*: GitHub then refuses a push that would publish your Hotmail address.
 
 ---
 
@@ -157,6 +154,7 @@ Reporting them helps everyone who uses this data (the NS app, 9292…). If you w
   - **If you ever move the domain away from Cloudflare, or turn DNSSEC off there:** first remove the key at TransIP (*Beheer → DNSSEC-instellingen*), wait a day, and only then make the change. The other way round, the site is unreachable for a large share of visitors until the registry catches up.
 - **2026-10-03, report address:** `meld@trapvrij.nl`, which Cloudflare Email Routing forwards to Daan's own mailbox. Daan tested it; the MX and SPF records are live. The site uses it since 3 Oct, and Daan's personal address is gone from the site and the docs. Older versions in the git history still contain it; we leave the history as is.
 - **2026-10-03, commit email:** new commits in this repo use Daan's GitHub no-reply address, `196313083+EamenFarand@users.noreply.github.com`, set in the repo's own git settings (`.git/config`). Older commits keep the old address.
+- **2026-10-03, GitHub email privacy:** Daan turned on *Keep my email addresses private* and *Block command line pushes that expose my email* (GitHub, *Settings → Emails*). A push with his private address in a new commit is now refused.
 - **2026-10-03, Google Search Console:** the domain property is verified (DNS TXT record), and Daan submitted the sitemap. Check indexing around 17 Oct (PLAN.md, housekeeping).
 - **2026-10-02, Phase 3:** go (after the softer dark mode).
 - **2026-10-02, lift logger:** stopped after 71 hours with all three nightly snapshots, and analysed (audit/REPORT.md Q5). The log moved out of Nextcloud to the cache folder.
