@@ -11,6 +11,7 @@ Built and running:
 - the lift listener (code) and the site's lift warnings.
 
 Waiting on Daan (NEEDS_DAAN 1): the lift listener runs on his server since 3 Oct 10:02, and the store is connected (`wrangler.toml`, binding LIFTS). Left: after 04:02 on 4 Oct, he confirms it publishes; then check `/api/lifts` and the warnings on the site.
+Also NEEDS_DAAN 7: submit the sitemap in Search Console (the domain is verified; the form needs the full address).
 
 
 ## Phase 3: done
@@ -35,17 +36,19 @@ Waiting on Daan (NEEDS_DAAN 1): the lift listener runs on his server since 3 Oct
   - `functions/api/lifts.js` serves the KV value read-only. It returns 404 until there is one, and the site then shows "unknown".
   - The site has three freshness levels: live, "as of 04:02" after 30 min silence, and unknown after 26 h.
   - Warnings cover origin, changes and destination, only for lifts serving the tracks the typical journey uses (the build now stores those tracks). They show in the panel, next to change stations, and on list entries, and refresh every 5 min.
-- Also: the softer dark mode, the name Trapvrij, and a report link per station.
+- Also: the softer dark mode, the name Trapvrij, and a report link per station. Reports go to `meld@trapvrij.nl` (Cloudflare Email Routing) since 3 Oct.
 
 ## Phase 3: left
-1. **Daan's step** (NEEDS_DAAN 1). Items 2–6 there are optional or waiting on others.
+1. **Daan's steps:** NEEDS_DAAN 1 (the listener) and 7 (the sitemap). Items 2–6 there are optional or waiting on others.
 2. Done 3 Oct: `wrangler.toml` with the KV binding `LIFTS` is deployed; `/api/lifts` answers 404 until the listener's first publish (after 04:02 on 4 Oct). Then check it and the warnings with real data.
 3. Done 3 Oct: `SITE_URL` in `deploy.yml` is `https://trapvrij.nl`; the site, redirects and canonical URLs work there.
-4. **v1 definition of done:** nightly pipeline green for 7 consecutive days, counted once the domain is live.
-5. **GitHub limits:**
+4. **After the listener's first publish:** update the lift text in the about box, which still says "binnenkort" (PLAN.md, housekeeping).
+5. **About two weeks after the sitemap (around 17 Oct):** ask Daan for Search Console's indexing report and fix what it flags (PLAN.md, housekeeping).
+6. **v1 definition of done:** nightly pipeline green for 7 consecutive days, counted once the domain is live.
+7. **GitHub limits:**
    - Scheduled workflows in a public repo pause after 60 days without repo activity: add a keep-alive, or note it for Daan.
    - `ubuntu-latest` moves to Ubuntu 26 from 19 Oct; we pin `ubuntu-24.04`.
-6. Then stop and summarise Phase 3 for Daan.
+8. Then stop and summarise Phase 3 for Daan.
 
 ## Done before
 - **Phase 0**: data audit, verdict Go. See `audit/REPORT.md`, including Q5 on the 72-hour lift log.

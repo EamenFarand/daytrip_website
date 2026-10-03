@@ -6,7 +6,7 @@ Everything that needs you, batched. Open items first; answered items are kept at
 
 ## Open
 
-The site is live at **<https://trapvrij.nl>**, with DNSSEC. Item 1 is what's left from you for v1: confirming the lift listener publishes.
+The site is live at **<https://trapvrij.nl>**, with DNSSEC. Item 1 is what's left from you for v1: confirming the lift listener publishes. Item 7 (Google Search Console) doesn't block v1; only submitting the sitemap is left.
 
 ### 1. Run the lift listener on your home server
 
@@ -128,7 +128,31 @@ Reporting them helps everyone who uses this data (the NS app, 9292…). If you w
   2. Add three lines: `.git`, `node_modules` and `.venv`. Each pattern matches that folder name anywhere.
   3. Copies already on the Nextcloud server stay there. Delete them on the server (web interface) only if you need the space, and only once the client shows the folders as ignored. Otherwise the deletion could sync back to your PC.
 - **If GitHub emails that "Build and deploy" was disabled:** GitHub pauses scheduled workflows in a public repo after 60 days without new commits. To restart it, open the repo's *Actions* tab, choose *Build and deploy*, and click *Enable workflow*. Until then the site keeps working, but with the data from the last build.
-- **The GitHub repo is public**, and commit author emails are visible. Fine as is; if you'd rather use GitHub's no-reply address, send it to me and I'll switch.
+- **The GitHub repo is public**, and every commit shows its author's email: your Hotmail address. The site no longer shows it, but new commits still do. If you want that to stop, say so, and I'll use your GitHub no-reply address for new commits in this repo. Old commits keep the old address.
+
+### 7. Google Search Console *(soon; about 10 minutes, then waiting)*
+
+**Status 3 Oct:** the domain is verified (its TXT record is live). **Left:** step 6, with the full address, and optionally step 7.
+
+Without this, Google can take weeks to find the 395 station pages. Search Console also shows later which pages are indexed and what people search for to find the site. Nothing here is secret.
+
+1. Go to <https://search.google.com/search-console> and sign in with a Google account you'll keep.
+2. *Add property* → choose **Domain** (the left option) → enter `trapvrij.nl` → *Continue*.
+3. Google shows a TXT record starting with `google-site-verification=`. Copy it.
+   - If Google offers to verify automatically through Cloudflare, that's fine too: follow its steps and skip to step 6.
+4. In the Cloudflare dashboard, open **trapvrij.nl → DNS → Records → Add record**:
+   - *Type:* `TXT`;
+   - *Name:* `@`;
+   - *Content:* the copied value;
+   - *TTL:* Auto.
+
+   Click *Save*.
+5. Back in Search Console, click *Verify*. If it fails, wait an hour and try again.
+6. In Search Console, open *Sitemaps* in the left menu, enter the full address `https://trapvrij.nl/sitemap.xml` and click *Submit*.
+   - A Domain property needs the full address; `sitemap.xml` alone gives "Invalid sitemap address".
+   - The status may say *Couldn't fetch* for the first hours; that's normal for a new sitemap. It should then become *Success*, with 397 discovered pages.
+7. Optional, one click: at <https://www.bing.com/webmasters>, choose *Import from Google Search Console*. That covers Bing, DuckDuckGo and Ecosia as well.
+8. Tell Claude Code it's done. It will check after about two weeks how many station pages are indexed (PLAN.md, Phase 3 housekeeping).
 
 ---
 
@@ -144,8 +168,7 @@ Reporting them helps everyone who uses this data (the NS app, 9292…). If you w
 - **2026-10-01, Phase 2 review:** done. Phase 3 expanded in PLAN.md: live lift status, station pages, housekeeping.
 - **2026-10-02, name:** **Trapvrij**. It's on the site; the working title is gone.
 - **2026-10-02, domain:** `trapvrij.nl`, registered at TransIP. Checked in the .nl registry: active since 2 Oct 14:04 UTC, TransIP nameservers, DNSSEC on. Nameservers moved to Cloudflare the same evening.
-- **2026-10-02, error reports:** to deonw_W@hotmail.com. It's on the about page and behind a "Meld het" link in every station panel, with the station in the subject.
-  - The address is now public, so expect some spam. An alias can replace it any time; it's set in one place, `web/src/contact.ts`.
+- **2026-10-02, error reports:** to Daan's own address at first, replaced on 3 Oct (below). The address is on the about page and behind a "Meld het" link in every station panel, with the station in the subject. It's set in one place, `web/src/contact.ts`.
 - **2026-10-02, Cloudflare:** both GitHub secrets are set.
   - Checked with the workflow *Check Cloudflare secrets*: the token is an active user token, and it may manage Pages in the account (0 projects so far).
   - Re-run that workflow from the Actions tab whenever you replace the token.
@@ -153,5 +176,6 @@ Reporting them helps everyone who uses this data (the NS app, 9292…). If you w
 - **2026-10-03, trapvrij.nl connected:** Daan added the domain to the Pages project and a www-to-root redirect. Checked: https://trapvrij.nl serves the site, and www and http redirect to it. The deploy now checks trapvrij.nl.
 - **2026-10-03, DNSSEC:** on again. Daan entered Cloudflare's key at TransIP; the registry accepted it at 11:52 and published it at 12:21 (Dutch time). Checked from outside: the DS record on all .nl servers matches Cloudflare's signing key (key tag 2371, algorithm 13), and Google's and Cloudflare's resolvers validate trapvrij.nl and www.
   - **If you ever move the domain away from Cloudflare, or turn DNSSEC off there:** first remove the key at TransIP (*Beheer → DNSSEC-instellingen*), wait a day, and only then make the change. The other way round, the site is unreachable for a large share of visitors until the registry catches up.
+- **2026-10-03, report address:** `meld@trapvrij.nl`, which Cloudflare Email Routing forwards to Daan's own mailbox. Daan tested it; the MX and SPF records are live. The site uses it since 3 Oct, and Daan's personal address is gone from the site and the docs. Older versions in the git history still contain it; we leave the history as is.
 - **2026-10-02, Phase 3:** go (after the softer dark mode).
 - **2026-10-02, lift logger:** stopped after 71 hours with all three nightly snapshots, and analysed (audit/REPORT.md Q5). The log moved out of Nextcloud to the cache folder.
