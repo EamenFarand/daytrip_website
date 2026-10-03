@@ -25,6 +25,8 @@ You can ignore the DNS records on TransIP's domain page (A 37.97.254.27 and so o
 
 ### 2. Run the lift listener on your home server
 
+**Status 3 Oct:** the listener runs on your server since 10:02 (log: connected, waiting for the full status), and the store `trapvrij-lifts` is connected to the site (`wrangler.toml`; `/api/lifts` answers 404 = connected but empty). **Left:** after about 04:02 tonight, check that the log says `published: …` (part B, step 6) and tell me; I'll check the site.
+
 The code is ready: [lifts/README.md](../lifts/README.md). CI checks that its Docker image builds. Until it runs, the site says the lift status is unknown.
 
 **Part A, in the Cloudflare dashboard** (any computer):

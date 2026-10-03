@@ -12,7 +12,7 @@ Built and running:
 
 Waiting on Daan (NEEDS_DAAN 1–2):
 1. Turn DNSSEC back on at TransIP (Cloudflare signs the zone; key tag 2371). trapvrij.nl itself is connected and live since 3 Oct.
-2. Run the lift listener on his home server, and send me the KV store ID.
+2. The lift listener runs on his server since 3 Oct 10:02, and the store is connected (`wrangler.toml`, binding LIFTS). Left: after 04:02 on 4 Oct, confirm it publishes, then check `/api/lifts` and the warnings on the site.
 
 
 ## Phase 3: done
@@ -41,7 +41,7 @@ Waiting on Daan (NEEDS_DAAN 1–2):
 
 ## Phase 3: left
 1. **Daan's steps** (NEEDS_DAAN 1–3).
-2. **After step 3:** add `wrangler.toml` with the KV binding `LIFTS` (the store ID from Daan), deploy, and check `/api/lifts` and the warnings with real data after the next 04:02.
+2. Done 3 Oct: `wrangler.toml` with the KV binding `LIFTS` is deployed; `/api/lifts` answers 404 until the listener's first publish (after 04:02 on 4 Oct). Then check it and the warnings with real data.
 3. Done 3 Oct: `SITE_URL` in `deploy.yml` is `https://trapvrij.nl`; the site, redirects and canonical URLs work there.
 4. **v1 definition of done:** nightly pipeline green for 7 consecutive days, counted once the domain is live.
 5. **GitHub limits:**
