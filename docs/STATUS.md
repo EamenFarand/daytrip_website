@@ -37,6 +37,7 @@ Search Console: domain verified and sitemap submitted on 3 Oct.
   - The site has three freshness levels: live, "as of 04:02" after 30 min silence, and unknown after 26 h.
   - Warnings cover origin, changes and destination, only for lifts serving the tracks the typical journey uses (the build now stores those tracks). They show in the panel, next to change stations, and on list entries, and refresh every 5 min.
 - Also: the softer dark mode, the name Trapvrij, and a report link per station. Reports go to `meld@trapvrij.nl` (Cloudflare Email Routing) since 3 Oct.
+- **Visit counts:** Cloudflare Web Analytics, switched on for the Pages project; Cloudflare adds its script to each page on deploy (not to the 404 page). Checked 3 Oct on the live site: no cookies, nothing in browser storage. The footer says so (DECISIONS, 2026-10-03).
 
 ## Phase 3: left
 1. **Daan's step:** NEEDS_DAAN 1 (the listener). Items 2–6 there are optional or waiting on others.
