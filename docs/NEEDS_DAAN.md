@@ -116,12 +116,9 @@ Anomalies found so far:
 
 Reporting them helps everyone who uses this data (the NS app, 9292…). If you want that, I'll draft a short email for you to send.
 
-### 6. Housekeeping
+### 6. Good to know
 
-- **Nextcloud: one pattern left.** `.git`, `.venv` and `.env` are on Nextcloud's ignore list (checked 3 Oct), but `node_modules` isn't, so `web/node_modules` (115 MB, about 3,000 files) still syncs. It can be rebuilt with one command.
-  1. In the Nextcloud desktop client: *Settings → Edit Ignored Files*.
-  2. Add `node_modules`. It matches that folder name anywhere.
-  3. Copies already on the Nextcloud server stay there. Delete them on the server (web interface) only if you need the space, and only once the client shows the folders as ignored. Otherwise the deletion could sync back to your PC.
+- **Old copies on the Nextcloud server:** the generated folders that synced before (about 330 MB) are still there. Delete them in the web interface only if you need the space. The client now ignores them, so the deletion won't reach your PC.
 - **If GitHub emails that "Build and deploy" was disabled:** GitHub pauses scheduled workflows in a public repo after 60 days without new commits. To restart it, open the repo's *Actions* tab, choose *Build and deploy*, and click *Enable workflow*. Until then the site keeps working, but with the data from the last build.
 
 ---
@@ -151,5 +148,6 @@ Reporting them helps everyone who uses this data (the NS app, 9292…). If you w
 - **2026-10-03, GitHub email privacy:** Daan turned on *Keep my email addresses private* and *Block command line pushes that expose my email* (GitHub, *Settings → Emails*). A push with his private address in a new commit is now refused.
 - **2026-10-03, Google Search Console:** the domain property is verified (DNS TXT record), and Daan submitted the sitemap. Check indexing around 17 Oct (PLAN.md, housekeeping).
 - **2026-10-03, Bing:** Daan imported the site from Search Console into Bing Webmaster Tools, which also covers DuckDuckGo and Ecosia.
+- **2026-10-03, Nextcloud:** `.git`, `node_modules`, `.venv` and `.env` are on the client's ignore list (checked in its `sync-exclude.lst`), so the generated folders and the local settings file no longer sync.
 - **2026-10-02, Phase 3:** go (after the softer dark mode).
 - **2026-10-02, lift logger:** stopped after 71 hours with all three nightly snapshots, and analysed (audit/REPORT.md Q5). The log moved out of Nextcloud to the cache folder.
