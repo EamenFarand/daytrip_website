@@ -3,17 +3,17 @@
 *Last updated: 2026-10-02 (session 3)*
 
 ## Where we are
-**Phase 3 is under way, and the site is live at <https://trapvrij.pages.dev>.** Daan gave the go on 2 Oct.
+**Phase 3 is under way, and the site is live at <https://trapvrij.nl>** (www and http redirect there). Daan gave the go on 2 Oct.
 Built and running:
 - CI on every push;
 - the twice-daily build and deploy;
 - station pages;
 - the lift listener (code) and the site's lift warnings.
 
-Waiting on Daan (NEEDS_DAAN 1–3):
-1. Connect `trapvrij.nl` in the Cloudflare dashboard; the DNS already points to Cloudflare.
-2. Turn DNSSEC back on.
-3. Run the lift listener on his home server, and send me the KV store ID.
+Waiting on Daan (NEEDS_DAAN 1–2):
+1. Turn DNSSEC back on at TransIP (Cloudflare signs the zone; key tag 2371). trapvrij.nl itself is connected and live since 3 Oct.
+2. Run the lift listener on his home server, and send me the KV store ID.
+
 
 ## Phase 3: done
 - **CI:** `.github/workflows/test.yml` runs on every push:
@@ -42,7 +42,7 @@ Waiting on Daan (NEEDS_DAAN 1–3):
 ## Phase 3: left
 1. **Daan's steps** (NEEDS_DAAN 1–3).
 2. **After step 3:** add `wrangler.toml` with the KV binding `LIFTS` (the store ID from Daan), deploy, and check `/api/lifts` and the warnings with real data after the next 04:02.
-3. **After step 1:** switch `SITE_URL` in `deploy.yml` to `https://trapvrij.nl`, and check the site, the redirects and the canonical URLs there.
+3. Done 3 Oct: `SITE_URL` in `deploy.yml` is `https://trapvrij.nl`; the site, redirects and canonical URLs work there.
 4. **v1 definition of done:** nightly pipeline green for 7 consecutive days, counted once the domain is live.
 5. **GitHub limits:**
    - Scheduled workflows in a public repo pause after 60 days without repo activity: add a keep-alive, or note it for Daan.

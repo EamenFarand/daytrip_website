@@ -6,26 +6,24 @@ Everything that needs you, batched. Open items first; answered items are kept at
 
 ## Open
 
-The site is live at **<https://trapvrij.pages.dev>** (Phase 3 in progress). Items 1–3 are what's left from you for v1: the domain, DNSSEC and the lift listener.
+The site is live at **<https://trapvrij.nl>**. Items 1 and 2 are what's left from you for v1: DNSSEC and the lift listener.
 
-### 1. Connect trapvrij.nl to the site *(two clicks; needed for the launch)*
+### 1. Turn DNSSEC back on at TransIP *(Cloudflare's side is done)*
 
-The DNS switch worked: on 2 Oct at 21:40 every public DNS server answered with Cloudflare's nameservers. The deploy key can only deploy, not change DNS (on purpose), so connect the domain in the dashboard:
+Cloudflare already signs the domain. The .nl registry just doesn't know the key yet, so TransIP has to pass it on. The form isn't on the page in your screenshots; it's behind *Beheer*:
 
-1. In Cloudflare, open *Workers & Pages → trapvrij → Custom domains → Set up a custom domain*.
-2. Enter `trapvrij.nl`, then *Continue → Activate domain*. Cloudflare adds the DNS record itself.
-3. Do the same for `www.trapvrij.nl`.
-4. Optional but neat: make www go to the main address. Go to *trapvrij.nl → Rules → Redirect Rules → Create rule*, choose the template *Redirect from WWW to root*, and deploy.
-5. Tell me when it's done. I'll switch the deploy's checks to `https://trapvrij.nl` and check the site there.
+1. In the TransIP control panel: *Domein & Hosting*, then click **trapvrij.nl** in the list on the left. Don't tick its box.
+2. Click the **Beheer** (Manage) button next to the domain name, and choose **DNSSEC-instellingen**.
+3. Fill in, and check them against Cloudflare (*trapvrij.nl → DNS → Settings → DNSSEC*); I read them from Cloudflare's DNS on 3 Oct:
+   - **Key tag:** `2371`
+   - **Flags:** `257` (Key Signing Key)
+   - **Algoritme:** `13` (ECDSA Curve P-256 with SHA-256)
+   - **Public key:** `mdsswUyr3DPW132mOi8V9xESWE8jTo0dxCjjnopKl+GqJxpVXckHAeF+KkxLbxILfDLUT0rAK9iUzy1L53eKGQ==`
+4. Click **Opslaan**. It can take a few hours for the registry to publish it. Cloudflare's DNSSEC status then changes from pending to active. Tell me and I'll check from outside.
 
-If Cloudflare says the domain isn't active yet, wait for its "active" email and try again.
+You can ignore the DNS records on TransIP's domain page (A 37.97.254.27 and so on). Since the nameservers point to Cloudflare, nobody uses them.
 
-### 2. Turn DNSSEC back on, now via Cloudflare *(any time after the domain is active)*
-
-1. In Cloudflare, go to *trapvrij.nl → DNS → Settings → DNSSEC → Enable*. Cloudflare shows the key details.
-2. At TransIP, turn DNSSEC on for external nameservers and copy those details over. For .nl, TransIP may ask for the public key (flags 257, algorithm 13) rather than the DS record. If its form is unclear, send me a screenshot of it (no secrets in it).
-
-### 3. Run the lift listener on your home server
+### 2. Run the lift listener on your home server
 
 The code is ready: [lifts/README.md](../lifts/README.md). CI checks that its Docker image builds. Until it runs, the site says the lift status is unknown.
 
@@ -46,7 +44,7 @@ The code is ready: [lifts/README.md](../lifts/README.md). CI checks that its Doc
    ```
    You should see `connected to tcp://pubsub.besteffort.ndovloket.nl:7666`. Until about 04:02 the next night it logs `not publishing: no full state yet`; that's expected. After that it logs `published: … lifts out` about every 10 minutes.
 
-### 4. Optional: send NDOV Loket two questions
+### 3. Optional: send NDOV Loket two questions
 
 Even an always-on listener can't fix a silent feed. On 2 October no lift changes arrived from 00:55 until at least 20:28, while the feed's heartbeats and the 04:02 full state kept coming. If you want, send this (contact details on <https://ndovloket.nl>):
 
@@ -62,7 +60,7 @@ Even an always-on listener can't fix a silent feed. On 2 October no lift changes
 > Met vriendelijke groet,
 > Daan
 
-### 5. Optional: desk check of 3 doubtful stations
+### 4. Optional: desk check of 3 doubtful stations
 
 The data calls these step-free, but another source says no and nothing in the lift/ramp register supports "yes". Until checked, they are **unknown** (not step-free), so doing nothing is safe. If you ever pass one, a look would settle it:
 
@@ -70,7 +68,7 @@ The data calls these step-free, but another source says no and nothing in the li
 - **Rotterdam Stadion**: event-only station; is there a step-free route?
 - **Diemen Zuid**: is the lift to the train platform in service (the register says "project")?
 
-### 6. NS API key: waiting for NS's approval *(not blocking)*
+### 5. NS API key: waiting for NS's approval *(not blocking)*
 
 You requested the travel information API ("Reisinformatie API"); that's the right one. It's only needed for an extra accuracy check, so nothing waits on it. When approved:
 
@@ -79,7 +77,7 @@ You requested the travel information API ("Reisinformatie API"); that's the righ
 3. Replace the line `# NS_API_KEY=   <- add your ...` with `NS_API_KEY=<your key>`, with no `#` in front.
 4. Tell me it's there. **Don't paste the key in chat.** I'll then run the comparison of ~20 routes against the NS journey planner.
 
-### 7. Decide (optional): report data errors to DOVA?
+### 6. Decide (optional): report data errors to DOVA?
 
 Anomalies found so far:
 - Blerick: two tracks on one island platform disagree.
@@ -89,7 +87,7 @@ Anomalies found so far:
 
 Reporting them helps everyone who uses this data (the NS app, 9292…). If you want that, I'll draft a short email for you to send.
 
-### 8. Housekeeping
+### 7. Housekeeping
 
 - **Stop Nextcloud from syncing generated folders** (corrected, per the plan). About 330 MB in total:
   - `web/node_modules`: 115 MB;
@@ -110,7 +108,7 @@ Reporting them helps everyone who uses this data (the NS app, 9292…). If you w
 - **2026-09-29, Phase 0 go/no-go:** Go.
 - **2026-09-29, what counts as a sprinter:** option A, NS Sprinters plus every regional train. Reason: *any train taken must avoid steps inside the train*; IC trains have steps. Logged in DECISIONS.md.
 - **2026-09-29, Houten and Houten Castellum in person:** both *accessible pain-free with a pram*. Recorded in `pipeline/overrides/stations.csv` as verified.
-- **2026-09-29, NS API:** requested the Reisinformatie API; waiting for approval (item 6). Not crucial: continue without it.
+- **2026-09-29, NS API:** requested the Reisinformatie API; waiting for approval (item 5). Not crucial: continue without it.
 - **2026-09-29, Phase 1 review:** go; Phase 2 (the map frontend) next.
 - **2026-09-29, Den Haag Centraal and Groningen:** *all tracks are accessible* (Daan knows both stations). Recorded as corrections (tracks 11–12 and 2–3 had no status in EPIAP).
 - **2026-09-30, Utrecht C: fewer stations with a change allowed:** a bug, fixed. More options now never make a journey look worse (DECISIONS.md).
@@ -123,5 +121,6 @@ Reporting them helps everyone who uses this data (the NS app, 9292…). If you w
   - Checked with the workflow *Check Cloudflare secrets*: the token is an active user token, and it may manage Pages in the account (0 projects so far).
   - Re-run that workflow from the Actions tab whenever you replace the token.
 - **2026-10-02, live lift status:** option (b), a listener in Docker on Daan's home server (Linux, always on). A second Cloudflare key and the small Cloudflare function are fine. Logged in DECISIONS.md; PLAN.md and CLAUDE.md updated. Setup steps come in Phase 3 (item 3).
+- **2026-10-03, trapvrij.nl connected:** Daan added the domain to the Pages project and a www-to-root redirect. Checked: https://trapvrij.nl serves the site, and www and http redirect to it. The deploy now checks trapvrij.nl.
 - **2026-10-02, Phase 3:** go (after the softer dark mode).
 - **2026-10-02, lift logger:** stopped after 71 hours with all three nightly snapshots, and analysed (audit/REPORT.md Q5). The log moved out of Nextcloud to the cache folder.

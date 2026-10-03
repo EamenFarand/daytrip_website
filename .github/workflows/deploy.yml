@@ -24,7 +24,7 @@ env:
   STEPFREE_BUILD: ${{ github.workspace }}/data/build
   STEPFREE_SITE: ${{ github.workspace }}/site
   PAGES_PROJECT: trapvrij
-  SITE_URL: https://trapvrij.pages.dev
+  SITE_URL: https://trapvrij.nl
   PYTHONUNBUFFERED: "1" # progress shows up in the log as it happens
 
 jobs:
