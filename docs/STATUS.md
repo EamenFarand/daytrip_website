@@ -11,7 +11,7 @@ Built and running:
 - the lift listener (code) and the site's lift warnings.
 
 Waiting on Daan (NEEDS_DAAN 1): the lift listener runs on his server since 3 Oct 10:02, and the store is connected (`wrangler.toml`, binding LIFTS). Left: after 04:02 on 4 Oct, he confirms it publishes; then check `/api/lifts` and the warnings on the site.
-Also NEEDS_DAAN 7: submit the sitemap in Search Console (the domain is verified; the form needs the full address).
+Search Console: domain verified and sitemap submitted on 3 Oct.
 
 
 ## Phase 3: done
@@ -39,7 +39,7 @@ Also NEEDS_DAAN 7: submit the sitemap in Search Console (the domain is verified;
 - Also: the softer dark mode, the name Trapvrij, and a report link per station. Reports go to `meld@trapvrij.nl` (Cloudflare Email Routing) since 3 Oct.
 
 ## Phase 3: left
-1. **Daan's steps:** NEEDS_DAAN 1 (the listener) and 7 (the sitemap). Items 2–6 there are optional or waiting on others.
+1. **Daan's step:** NEEDS_DAAN 1 (the listener). Items 2–6 there are optional or waiting on others.
 2. Done 3 Oct: `wrangler.toml` with the KV binding `LIFTS` is deployed; `/api/lifts` answers 404 until the listener's first publish (after 04:02 on 4 Oct). Then check it and the warnings with real data.
 3. Done 3 Oct: `SITE_URL` in `deploy.yml` is `https://trapvrij.nl`; the site, redirects and canonical URLs work there.
 4. **After the listener's first publish:** update the lift text in the about box, which still says "binnenkort" (PLAN.md, housekeeping).

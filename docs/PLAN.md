@@ -92,7 +92,7 @@ Verify current URLs, formats, licences and access requirements yourself; don't t
 - *Added 2026-10-03 after a check of the live site:*
   - **Lift text in the about box.** It still says live lift outages are coming ("binnenkort"). Once the listener's first publish is confirmed (NEEDS_DAAN 1), update it: what the lift status shows, where it comes from, how often it updates, and that it can be out of date.
   - **Report address.** Done 3 Oct: the site uses `meld@trapvrij.nl`, and Daan's personal address is gone from the site and the docs. Git history keeps old copies; Daan knows, and the history stays as is.
-  - **Search Console.** After Daan has verified the domain and submitted the sitemap (NEEDS_DAAN 7), wait about two weeks. Then ask him for the indexing report (*Pages* in Search Console), and fix any station pages Google flags.
+  - **Search Console.** Daan verified the domain and submitted the sitemap on 3 Oct; wait about two weeks (until around 17 Oct). Then ask him for the indexing report (*Pages* in Search Console), and fix any station pages Google flags.
     - For that check: robots.txt keeps `/data/` disallowed, so Google renders each page without its data. It sees the page's own text plus the line that the data couldn't be loaded, and URL inspection lists the blocked files. If Google flags pages for this, allow `/data/` and keep it out of the index with an `X-Robots-Tag: noindex` header instead.
 
 ## v1 definition of done
