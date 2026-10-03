@@ -27,22 +27,64 @@ You can ignore the DNS records on TransIP's domain page (A 37.97.254.27 and so o
 
 The code is ready: [lifts/README.md](../lifts/README.md). CI checks that its Docker image builds. Until it runs, the site says the lift status is unknown.
 
-1. **Create the store.** In Cloudflare, go to *Storage & Databases → KV → Create* (or find it under *Workers & Pages*). Name it `trapvrij-lifts`, and copy its **ID**.
-2. **Create the second key:**
-   1. Go to *My Profile → API Tokens → Create Token → Create Custom Token*, and name it `trapvrij-lifts-writer`.
-   2. Permission: *Account · Workers KV Storage · Edit*. Account resources: your account.
-   3. Click *Continue to summary → Create Token*, and copy the token. It goes only into the env file on your server, never into GitHub or this chat.
-3. **Tell me the store's ID.** It isn't secret. I'll connect the store to the site.
-4. **On the server:**
+**Part A, in the Cloudflare dashboard** (any computer):
+1. **Create the store.**
+   1. In the left menu, open *Storage & Databases → Workers KV* (in some versions it's under *Workers & Pages → KV*).
+   2. Click *Create* and name it `trapvrij-lifts`.
+   3. Copy its **ID**: 32 letters and digits, shown in the list of stores.
+2. **Create the second key** (a separate one; leave the deploy key alone):
+   1. Click your profile icon at the top right, then *My Profile → API Tokens → Create Token*.
+   2. At the bottom, under *Custom token*, click *Get started*.
+   3. *Token name:* `trapvrij-lifts-writer`.
+   4. *Permissions:* one row, chosen from the three dropdowns: **Account** · **Workers KV Storage** · **Edit**. Nothing else.
+   5. *Account Resources:* **Include** · your account.
+   6. *Client IP Address Filtering:* leave it empty. Your home IP can change, and the listener would then stop.
+   7. *TTL:* leave it empty, so the key doesn't expire.
+   8. Click *Continue to summary → Create Token*, and copy the token right away; it's only shown once. Keep it for part B. It goes only into the settings file on your server, never into GitHub or this chat.
+3. **Send me the store's ID** (not the token). The ID isn't secret. I'll connect the store to the site.
+
+**Part B, on the server** (in a terminal on the machine itself, or over SSH):
+1. **Check that git and Docker are there:**
    ```bash
+   git --version && docker --version && docker compose version
+   ```
+   - If `docker compose` isn't found but `docker-compose` is, use `docker-compose` (with a dash) in the commands below.
+   - If Docker says *permission denied*, put `sudo` in front of each docker command.
+2. **Get the code** (the repo is public, so no login is needed). Your home folder is fine:
+   ```bash
+   cd ~
    git clone https://github.com/EamenFarand/daytrip_website.git trapvrij
    cd trapvrij/lifts
-   cp .env.example .env
-   nano .env               # account ID, store ID and the key from step 2
-   docker compose up -d --build
-   docker compose logs -f  # Ctrl+C stops watching; it keeps running
    ```
-   You should see `connected to tcp://pubsub.besteffort.ndovloket.nl:7666`. Until about 04:02 the next night it logs `not publishing: no full state yet`; that's expected. After that it logs `published: … lifts out` about every 10 minutes.
+3. **Fill in the settings:**
+   ```bash
+   cp .env.example .env
+   nano .env
+   ```
+   Fill in the three lines, with no spaces around the `=`:
+   - `CF_ACCOUNT_ID`: the same Account ID you put in GitHub. Cloudflare also shows it on *Workers & Pages* (right-hand side) and in the dashboard's web address.
+   - `CF_KV_NAMESPACE_ID`: the store's ID from part A.1.
+   - `CF_API_TOKEN`: the token from part A.2.
+
+   Save with Ctrl+O and Enter, then close with Ctrl+X. Then, so only you can read the file:
+   ```bash
+   chmod 600 .env
+   ```
+4. **Start it:**
+   ```bash
+   docker compose up -d --build
+   ```
+   The first time takes a minute or two, while it builds the image.
+5. **Watch it work:**
+   ```bash
+   docker compose logs -f
+   ```
+   Ctrl+C stops watching; the listener keeps running. You should see:
+   - `connected to tcp://pubsub.besteffort.ndovloket.nl:7666`;
+   - then, every few minutes until about 04:02 the next night, `not publishing: no full state yet`. That's expected: it waits for the nightly full status.
+6. **The next morning,** run `docker compose logs --tail 20` (in `~/trapvrij/lifts`). You should see `full state: … lifts` and then `published: … of … lifts out` about every 10 minutes. Tell me, and I'll check the site.
+
+It restarts by itself after a crash or a reboot, as long as Docker itself starts at boot. That's the default on most systems; if not, `sudo systemctl enable docker`. To update later: `cd ~/trapvrij && git pull && cd lifts && docker compose up -d --build`.
 
 ### 3. Optional: send NDOV Loket two questions
 
