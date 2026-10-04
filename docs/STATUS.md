@@ -10,7 +10,7 @@ Built and running:
 - station pages;
 - the lift listener on Daan's server (publishing since 4 Oct, 04:02) and the site's lift warnings.
 
-Waiting on Daan (NEEDS_DAAN 1): update the listener on his server (one command), so it sends lifts that have just come back. The site already handles them. Nothing else from him blocks v1.
+Nothing from Daan blocks v1. The listener runs the new code since 4 Oct (20:10 UTC), and the first lift that came back showed correctly on the live site.
 Search Console: domain verified and sitemap submitted on 3 Oct.
 
 
@@ -38,17 +38,17 @@ Search Console: domain verified and sitemap submitted on 3 Oct.
   - Warnings cover origin, changes and destination, only for lifts serving the tracks the typical journey uses (the build now stores those tracks). They show in the panel, next to change stations, and on list entries, and refresh every 5 min.
   - Live since 4 Oct: the full status arrived at 04:02, then a publish every few minutes. Checked with real data: `/api/lifts`, the station panels, and the warnings (10 of Houten's destinations).
   - The about box explains the lift status (what it shows, the source, about ten minutes' delay, that it can be out of date), and the sources credit it.
-  - A lift that has just come back keeps a softer warning for 30 minutes (Daan's choice A, DECISIONS 2026-10-04): the listener lists it as `back`, and the site says "net weer in gebruik". The site has it since 4 Oct; the listener once Daan updates it.
+  - A lift that has just come back keeps a softer warning for 30 minutes (Daan's choice A, DECISIONS 2026-10-04): the listener lists it as `back`, and the site says "net weer in gebruik". Site and listener have it since 4 Oct; checked live with UT-LIF-009 (Utrecht Centraal).
 - Also: the softer dark mode, the name Trapvrij, and a report link per station. Reports go to `meld@trapvrij.nl` (Cloudflare Email Routing) since 3 Oct.
 - **Visit counts:** Cloudflare Web Analytics, switched on for the Pages project; Cloudflare adds its script to each page on deploy (not to the 404 page). Checked 3 Oct on the live site: no cookies, nothing in browser storage. The footer says so (DECISIONS, 2026-10-03).
 
 ## Phase 3: left
-1. **Daan's step:** NEEDS_DAAN 1, update the listener. Then check on the live site that a lift that has just come back shows as "net weer in gebruik" (the log says `… just back`). Items 2–6 there are optional or waiting on others.
+1. Done 4 Oct: Daan updated the listener, and a lift that came back (UT-LIF-009) showed on the live site as "net weer in gebruik". NEEDS_DAAN now holds only optional items or ones waiting on others.
 2. Done 4 Oct: the store is connected (`wrangler.toml`, binding `LIFTS`), the listener publishes, and `/api/lifts` and the warnings are checked with real data.
 3. Done 3 Oct: `SITE_URL` in `deploy.yml` is `https://trapvrij.nl`; the site, redirects and canonical URLs work there.
 4. Done 4 Oct: the lift text in the about box (PLAN.md, housekeeping).
 5. **About two weeks after the sitemap (around 17 Oct):** ask Daan for Search Console's indexing report and fix what it flags (PLAN.md, housekeeping).
-6. **v1 definition of done:** nightly pipeline green for 7 consecutive days, counted once the domain is live.
+6. **v1 definition of done:** nightly pipeline green for 7 consecutive days, counted once the domain is live. So far 3 and 4 Oct: every scheduled run green.
 7. **GitHub limits:**
    - Scheduled workflows in a public repo pause after 60 days without repo activity: add a keep-alive, or note it for Daan.
    - `ubuntu-latest` moves to Ubuntu 26 from 19 Oct; we pin `ubuntu-24.04`.
@@ -75,6 +75,7 @@ Search Console: domain verified and sitemap submitted on 3 Oct.
   - Possible later: preload the data, start the map when idle.
 - Lift warnings use the typical journey's tracks; other departures can use other tracks (DECISIONS).
 - The map markers are small; the list is the accessible equivalent (WCAG 2.5.8).
+- GitHub starts the scheduled builds hours late (3–4 Oct: around 10:40 and 18:40 UTC instead of 05:40 and 15:10). The data still refreshes daily, and with two runs a day a dropped run is covered.
 
 ## How to resume
 - Read `CLAUDE.md`, this file, `docs/PLAN.md`, `docs/DECISIONS.md` (newest first), `pipeline/README.md`, `web/README.md` and `lifts/README.md`.

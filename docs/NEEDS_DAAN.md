@@ -6,19 +6,9 @@ Everything that needs you, batched. Open items first; answered items are kept at
 
 ## Open
 
-The site is live at **<https://trapvrij.nl>**, with DNSSEC and the live lift status. Nothing from you blocks v1. Item 1 takes a minute.
+The site is live at **<https://trapvrij.nl>**, with DNSSEC and the live lift status. Nothing from you is open for v1; the items below are optional or waiting on others.
 
-### 1. Update the lift listener on your server *(about 2 minutes)*
-
-The site now knows about lifts that have just come back (your choice A). The listener on your server still needs the new code to send them. On the server:
-
-```bash
-cd ~/trapvrij && git pull && cd lifts && docker compose up -d --build
-```
-
-Then, after a few minutes, `docker compose logs --tail 5`. The lines now end in `, … just back`, e.g. `published: 50 of 443 lifts out, 1 just back`. Tell me, and I'll check the site.
-
-### 2. Optional: send NDOV Loket two questions
+### 1. Optional: send NDOV Loket two questions
 
 Even an always-on listener can't fix a silent feed. On 2 October no lift changes arrived from 00:55 until at least 20:28, while the feed's heartbeats and the 04:02 full state kept coming. If you want, send this (contact details on <https://ndovloket.nl>):
 
@@ -34,7 +24,7 @@ Even an always-on listener can't fix a silent feed. On 2 October no lift changes
 > Met vriendelijke groet,
 > Daan
 
-### 3. Optional: desk check of 3 doubtful stations
+### 2. Optional: desk check of 3 doubtful stations
 
 The data calls these step-free, but another source says no and nothing in the lift/ramp register supports "yes". Until checked, they are **unknown** (not step-free), so doing nothing is safe. If you ever pass one, a look would settle it:
 
@@ -42,7 +32,7 @@ The data calls these step-free, but another source says no and nothing in the li
 - **Rotterdam Stadion**: event-only station; is there a step-free route?
 - **Diemen Zuid**: is the lift to the train platform in service (the register says "project")?
 
-### 4. NS API key: waiting for NS's approval *(not blocking)*
+### 3. NS API key: waiting for NS's approval *(not blocking)*
 
 You requested the travel information API ("Reisinformatie API"); that's the right one. It's only needed for an extra accuracy check, so nothing waits on it. When approved:
 
@@ -51,7 +41,7 @@ You requested the travel information API ("Reisinformatie API"); that's the righ
 3. Replace the line `# NS_API_KEY=   <- add your ...` with `NS_API_KEY=<your key>`, with no `#` in front.
 4. Tell me it's there. **Don't paste the key in chat.** I'll then run the comparison of ~20 routes against the NS journey planner.
 
-### 5. Decide (optional): report data errors to DOVA?
+### 4. Decide (optional): report data errors to DOVA?
 
 Anomalies found so far:
 - Blerick: two tracks on one island platform disagree.
@@ -61,7 +51,7 @@ Anomalies found so far:
 
 Reporting them helps everyone who uses this data (the NS app, 9292…). If you want that, I'll draft a short email for you to send.
 
-### 6. Good to know
+### 5. Good to know
 
 - **Old copies on the Nextcloud server:** the generated folders that synced before (about 330 MB) are still there. Delete them in the web interface only if you need the space. The client now ignores them, so the deletion won't reach your PC.
 - **If GitHub emails that "Build and deploy" was disabled:** GitHub pauses scheduled workflows in a public repo after 60 days without new commits. To restart it, open the repo's *Actions* tab, choose *Build and deploy*, and click *Enable workflow*. Until then the site keeps working, but with the data from the last build.
@@ -73,7 +63,7 @@ Reporting them helps everyone who uses this data (the NS app, 9292…). If you w
 - **2026-09-29, Phase 0 go/no-go:** Go.
 - **2026-09-29, what counts as a sprinter:** option A, NS Sprinters plus every regional train. Reason: *any train taken must avoid steps inside the train*; IC trains have steps. Logged in DECISIONS.md.
 - **2026-09-29, Houten and Houten Castellum in person:** both *accessible pain-free with a pram*. Recorded in `pipeline/overrides/stations.csv` as verified.
-- **2026-09-29, NS API:** requested the Reisinformatie API; waiting for approval (item 4). Not crucial: continue without it.
+- **2026-09-29, NS API:** requested the Reisinformatie API; waiting for approval (item 3). Not crucial: continue without it.
 - **2026-09-29, Phase 1 review:** go; Phase 2 (the map frontend) next.
 - **2026-09-29, Den Haag Centraal and Groningen:** *all tracks are accessible* (Daan knows both stations). Recorded as corrections (tracks 11–12 and 2–3 had no status in EPIAP).
 - **2026-09-30, Utrecht C: fewer stations with a change allowed:** a bug, fixed. More options now never make a journey look worse (DECISIONS.md).
@@ -96,5 +86,6 @@ Reporting them helps everyone who uses this data (the NS app, 9292…). If you w
 - **2026-10-03, Nextcloud:** `.git`, `node_modules`, `.venv` and `.env` are on the client's ignore list (checked in its `sync-exclude.lst`), so the generated folders and the local settings file no longer sync.
 - **2026-10-04, lift listener:** runs on Daan's server since 3 Oct (setup and commands: `lifts/README.md`). The full status arrived on 4 Oct at 04:02, and since then it publishes every few minutes, e.g. 50 of 443 lifts out. Checked on the live site: `/api/lifts` serves it, station panels list the lifts that are out with the time of the status, and 10 of Houten's destinations show a warning.
 - **2026-10-04, lifts that flip:** option A. A lift that has just come back keeps a softer warning for 30 minutes ("sinds 21:43 weer in gebruik, maar was net nog buiten gebruik"). DECISIONS.md, 2026-10-04.
+- **2026-10-04, listener updated:** at 20:10 UTC, carrying on from its saved state. The first lift just back was UT-LIF-009 (Utrecht Centraal, tracks 14/15) at 22:10 Dutch time. Two minutes later the site showed it as "net weer in gebruik": on Houten → Utrecht Zuilen, which changes there, and in the Utrecht Centraal panel.
 - **2026-10-02, Phase 3:** go (after the softer dark mode).
 - **2026-10-02, lift logger:** stopped after 71 hours with all three nightly snapshots, and analysed (audit/REPORT.md Q5). The log moved out of Nextcloud to the cache folder.

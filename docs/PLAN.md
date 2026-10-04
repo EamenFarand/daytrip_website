@@ -88,7 +88,7 @@ Verify current URLs, formats, licences and access requirements yourself; don't t
 - All text is generated from the data by plain code, with no AI at runtime (principle 2). Editorial "what to do here" content stays out of v1.
 
 ### Housekeeping
-- Done: the Nextcloud item in NEEDS_DAAN (now item 6, housekeeping) also excludes `node_modules` and `.venv`.
+- Done: Nextcloud ignores `.git`, `node_modules` and `.venv` (and `.env`); checked on 3 Oct.
 - *Added 2026-10-03 after a check of the live site:*
   - **Lift text in the about box.** Done 4 Oct: a "Liftstoringen" section says what the lift status shows, where it comes from, how fast it updates (usually within ten minutes), and that it can be out of date. The sources credit the lift status too.
   - **Report address.** Done 3 Oct: the site uses `meld@trapvrij.nl`, and Daan's personal address is gone from the site and the docs. Git history keeps old copies; Daan knows, and the history stays as is.
