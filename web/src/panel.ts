@@ -1,8 +1,8 @@
 // Station details in a dialog: step-free status with source and date, the journey, lifts, and links to check.
 
 import { reportLink } from "./contact";
-import { ACCESS_ICON, ACCESS_TEXT, TRACK_TEXT, changes, clock, duration, frequency, longDate, shortDate } from "./format";
-import { type Freshness, type StationWarning, freshnessText, journeyWarnings, outAt, outText } from "./lifts";
+import { ACCESS_ICON, ACCESS_TEXT, TRACK_TEXT, changes, clock, duration, frequency, longDate, shortDate, upperFirst } from "./format";
+import { type Freshness, type StationWarning, freshnessText, journeyWarnings, liftNote, outAt, outText, statusText, trouble } from "./lifts";
 import type { Verdict } from "./results";
 import type { LiftStatus, Meta, Station } from "./types";
 
@@ -19,11 +19,6 @@ export interface PanelContext {
 }
 
 const ROLE_TEXT = { vertrek: "vertrek", overstap: "overstap", aankomst: "aankomst" };
-
-/** "⚠ lift buiten gebruik" or "⚠ liftstatus onbekend", for a station on the journey. */
-export function liftNote(w: StationWarning): string {
-  return w.out.some((o) => o.status !== "unknown") ? "⚠ lift buiten gebruik" : "⚠ liftstatus onbekend";
-}
 
 function warningBox(warnings: StationWarning[]): HTMLElement {
   const box = el("div", undefined, "warn-box");
@@ -116,26 +111,29 @@ function liftBlock(st: Station, ctx: PanelContext): HTMLElement | null {
   const box = el("section");
   box.append(el("h3", "Liften", "panel-h"));
   const out = new Map(outAt(st, ctx.lifts, ctx.fresh).map((o) => [o.lift.id, o]));
-  const broken = out.size;
+  const back = [...out.values()].filter((o) => trouble(o) === "back").length;
+  const broken = out.size - back;
   const ul = el("ul", undefined, "lifts");
   for (const lift of st.lifts) {
     const where = lift.tracks.length ? `spoor ${lift.tracks.join("/")}` : "hal of ingang";
     const li = el("li", `${lift.code ?? lift.id} (${where})`);
     const o = out.get(lift.id);
     if (o) {
-      // no "since": the feed restarts that date with every nightly full status, so it's often wrong
-      const what = o.status === "unknown" ? " ⚠ Status onbekend" : " ⚠ Buiten gebruik";
+      // An outage shows no "since": the feed restarts that date with every nightly full status, so it's often wrong.
+      // A lift that is back does: that time is the listener's own.
+      const what = ` ⚠ ${upperFirst(statusText(o))}`;
       li.append(el("strong", what + (o.until ? `, naar verwachting tot ${shortDate(o.until)}` : ""), "warn"));
     }
     ul.append(li);
   }
-  // a short list is shown as is; a long one folds away unless a lift is out of order
+  // a short list is shown as is; a long one folds away unless a lift is out of order or has just come back
   if (st.lifts.length <= 4) {
     box.append(ul);
   } else {
     const details = el("details");
-    details.open = broken > 0;
-    details.append(el("summary", `${st.lifts.length} liften${broken ? `, ${broken} met een storing` : ""}`), ul);
+    details.open = out.size > 0;
+    const counts = [broken ? `${broken} met een storing` : "", back ? `${back} net weer in gebruik` : ""].filter(Boolean);
+    details.append(el("summary", [`${st.lifts.length} liften`, ...counts].join(", ")), ul);
     box.append(details);
   }
   box.append(el("p", freshnessText(ctx.lifts, ctx.fresh), "small"));

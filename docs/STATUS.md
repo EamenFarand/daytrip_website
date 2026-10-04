@@ -10,7 +10,7 @@ Built and running:
 - station pages;
 - the lift listener on Daan's server (publishing since 4 Oct, 04:02) and the site's lift warnings.
 
-Waiting on Daan (NEEDS_DAAN 1): should the site keep a softer warning for 30 minutes after a lift comes back? The feed flips a lot; my advice is yes. Nothing else from him blocks v1.
+Waiting on Daan (NEEDS_DAAN 1): update the listener on his server (one command), so it sends lifts that have just come back. The site already handles them. Nothing else from him blocks v1.
 Search Console: domain verified and sitemap submitted on 3 Oct.
 
 
@@ -38,12 +38,12 @@ Search Console: domain verified and sitemap submitted on 3 Oct.
   - Warnings cover origin, changes and destination, only for lifts serving the tracks the typical journey uses (the build now stores those tracks). They show in the panel, next to change stations, and on list entries, and refresh every 5 min.
   - Live since 4 Oct: the full status arrived at 04:02, then a publish every few minutes. Checked with real data: `/api/lifts`, the station panels, and the warnings (10 of Houten's destinations).
   - The about box explains the lift status (what it shows, the source, about ten minutes' delay, that it can be out of date), and the sources credit it.
+  - A lift that has just come back keeps a softer warning for 30 minutes (Daan's choice A, DECISIONS 2026-10-04): the listener lists it as `back`, and the site says "net weer in gebruik". The site has it since 4 Oct; the listener once Daan updates it.
 - Also: the softer dark mode, the name Trapvrij, and a report link per station. Reports go to `meld@trapvrij.nl` (Cloudflare Email Routing) since 3 Oct.
 - **Visit counts:** Cloudflare Web Analytics, switched on for the Pages project; Cloudflare adds its script to each page on deploy (not to the 404 page). Checked 3 Oct on the live site: no cookies, nothing in browser storage. The footer says so (DECISIONS, 2026-10-03).
 
 ## Phase 3: left
-1. **Daan's choice:** NEEDS_DAAN 1, a softer warning after a lift comes back. Items 2–6 there are optional or waiting on others.
-   - If A: the listener keeps a lift that came back less than 30 minutes ago in `out`, with status `back` and the time it came back; the site words it as "sinds HH:MM weer in gebruik". Deploy the site first, so it knows the new status before the listener sends it. Then Daan updates the listener (`git pull && docker compose up -d --build` in `~/trapvrij/lifts`).
+1. **Daan's step:** NEEDS_DAAN 1, update the listener. Then check on the live site that a lift that has just come back shows as "net weer in gebruik" (the log says `… just back`). Items 2–6 there are optional or waiting on others.
 2. Done 4 Oct: the store is connected (`wrangler.toml`, binding `LIFTS`), the listener publishes, and `/api/lifts` and the warnings are checked with real data.
 3. Done 3 Oct: `SITE_URL` in `deploy.yml` is `https://trapvrij.nl`; the site, redirects and canonical URLs work there.
 4. Done 4 Oct: the lift text in the about box (PLAN.md, housekeeping).
@@ -73,7 +73,6 @@ Search Console: domain verified and sitemap submitted on 3 Oct.
   - Station pages show their text within about 1 s.
   - The home page waits for data, and MapLibre needs about 0.6–0.9 s of main thread.
   - Possible later: preload the data, start the map when idle.
-- The lift feed flips often: in the 72-hour log, 3 in 10 lifts that came back were out again within the hour. Until NEEDS_DAAN 1 is decided, the site follows the feed as it is.
 - Lift warnings use the typical journey's tracks; other departures can use other tracks (DECISIONS).
 - The map markers are small; the list is the accessible equivalent (WCAG 2.5.8).
 

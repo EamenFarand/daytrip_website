@@ -35,6 +35,10 @@ export function shortDate(iso: string): string {
   return new Date(`${iso.slice(0, 10)}T12:00:00`).toLocaleDateString("nl-NL", { day: "numeric", month: "short", year: "numeric" });
 }
 
+export function upperFirst(text: string): string {
+  return text.charAt(0).toUpperCase() + text.slice(1);
+}
+
 /** The page title: the home page, or a station's page (also used by scripts/pages.ts). */
 export function pageTitle(stationName?: string): string {
   return stationName ? `Met de kinderwagen vanaf ${stationName} – Trapvrij` : "Trapvrij – waar kun je heen met de kinderwagen?";

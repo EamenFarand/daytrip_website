@@ -68,6 +68,19 @@ def test_the_newest_valid_condition_wins():
     assert s.current("C", datetime(2026, 10, 6, tzinfo=timezone.utc))["status"] == "notAvailable"
 
 
+def test_a_lift_that_comes_back_is_listed_as_back_for_half_an_hour():
+    s = State()
+    s.apply(full_state({"8400001_001": "notAvailable"}), NOW)
+    assert [o["status"] for o in s.payload(NOW)["out"]] == ["notAvailable"]  # last seen out at 12:00
+    s.apply(parse(message(condition("8400001_001", "available", "2026-10-02T12:05:00Z")))[0], NOW + timedelta(minutes=5))
+    back = [{"id": "8400001_001", "status": "back", "since": "2026-10-02T12:00:00Z", "until": None}]
+    assert s.payload(NOW + timedelta(minutes=5))["out"] == back
+    assert s.payload(NOW + timedelta(minutes=29))["out"] == back
+    assert s.payload(NOW + timedelta(minutes=30))["out"] == []
+    s.apply(parse(message(condition("8400001_001", "notAvailable", "2026-10-02T12:40:00Z")))[0], NOW + timedelta(minutes=40))
+    assert [o["status"] for o in s.payload(NOW + timedelta(minutes=40))["out"]] == ["notAvailable"]  # out again: a plain outage
+
+
 def test_a_resend_does_not_pile_up():
     s = State()
     for _ in range(5):
@@ -83,6 +96,7 @@ def test_never_publishes_an_implausible_state():
     assert problem(s.payload(NOW)) is None
     s.apply(full_state({f"84000{i:02d}_001": "notAvailable" for i in range(200)}), NOW)
     assert "out" in problem(s.payload(NOW))
+    assert problem({"full_state_at": "2026-10-02T02:02:00Z", "lifts": 400, "out": [{"status": "back"}] * 250}) is None  # working again
 
 
 def test_publishes_on_change_but_not_too_often(tmp_path):
@@ -102,7 +116,11 @@ def test_publishes_on_change_but_not_too_often(tmp_path):
 
 def test_the_state_survives_a_restart(tmp_path):
     s = State()
-    s.apply(full_state({"8400001_001": "notAvailable"}), NOW)
+    s.apply(full_state({"8400001_001": "notAvailable", "8400002_001": "notAvailable"}), NOW)
+    s.payload(NOW)
+    s.apply(parse(message(condition("8400002_001", "available", "2026-10-02T12:05:00Z")))[0], NOW + timedelta(minutes=5))
     s.save(tmp_path / "state.json")
     again = State.load(tmp_path / "state.json")
-    assert again.full_state_at == NOW and again.payload(NOW)["out"] == s.payload(NOW)["out"]
+    later = NOW + timedelta(minutes=10)
+    assert again.full_state_at == NOW
+    assert [(o["id"], o["status"]) for o in again.payload(later)["out"]] == [("8400001_001", "notAvailable"), ("8400002_001", "back")]

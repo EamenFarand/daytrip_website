@@ -4,6 +4,18 @@ One entry per non-obvious decision: what, why, and what was rejected. Newest on 
 
 ---
 
+### 2026-10-04 — A lift that has just come back keeps a softer warning for 30 minutes
+**What:** Daan's choice (option A). The listener keeps a lift that came back into service less than 30 minutes ago in `out`, with status `back` and the time it came back. The site says "sinds 21:43 weer in gebruik, maar was net nog buiten gebruik", counts it apart from real outages ("1 net weer in gebruik"), and the list says "lift net weer in gebruik" instead of "Liftstoring".
+
+**Why:**
+- The feed flips a lot. In the audit's 72-hour log there were 223 returns to service: 47 were out again within 30 minutes, 68 within the hour. Some lifts flip dozens of times a day (Arnhem Centraal AH-LIF-002: 42 changes in two days).
+- Following the feed as is made such a lift look fine between outages: a wrong "yes" (principle 1). Now it keeps a warning, worded honestly: it works at the moment.
+- It costs one or two extra warnings at a time (about three returns an hour), next to the 50 or so lifts that are out.
+- The listener does this, not the site: only the listener sees every change, while a page that has just opened doesn't know what happened before.
+- The time shown is the listener's own (when it last saw the lift out, at most 30 seconds off), so it's reliable, unlike the feed's start dates.
+
+**Rejected:** leaving it as is (option B); hiding short outages (a real outage would go unmentioned at first: not conservative); judging lifts by how often they flipped in recent hours (more rules for little gain).
+
 ### 2026-10-03 — Visits counted with Cloudflare Web Analytics
 **What:** Daan's choice. Visits are counted with Cloudflare Web Analytics, and every page's footer says so: "Geen cookies. We tellen bezoeken anoniem met Cloudflare Web Analytics." It said "Geen cookies, geen tracking." Cloudflare adds its script to the pages itself once Web Analytics is on for the Pages project, so there's no code for it in the repo.
 

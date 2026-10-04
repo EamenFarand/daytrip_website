@@ -1,7 +1,7 @@
 // The results as a list: the accessible equivalent of the map, and the easiest way to browse on a phone.
 
 import { ACCESS_ICON, ACCESS_TEXT, changes, duration, frequency } from "./format";
-import type { StationWarning } from "./lifts";
+import { type StationWarning, warnLine } from "./lifts";
 import { BAND_LABELS, type Verdict } from "./results";
 import type { Station } from "./types";
 
@@ -52,7 +52,7 @@ function item(v: Verdict, ctx: ListContext): HTMLLIElement {
     if (warnings.length) {
       const warn = document.createElement("span");
       warn.className = "result-warn";
-      warn.textContent = `⚠ Liftstoring: ${warnings.map((w) => w.station.name).join(", ")}`;
+      warn.textContent = warnLine(warnings);
       text.append(warn);
     }
   } else {

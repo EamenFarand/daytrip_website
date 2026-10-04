@@ -10,6 +10,7 @@ Why it works this way: `docs/DECISIONS.md` (2026-10-02) and `audit/REPORT.md` Q5
 
 - Holds **one** connection to the feed (NDOV Loket's fair-use rule), so run it in one place only.
 - Keeps every lift's status. The 04:02 full status replaces everything, and changes are added as they come.
+- Keeps a lift that came back less than 30 minutes ago on the list, as `back`: lifts often fail again soon after (`docs/DECISIONS.md`, 2026-10-04). The site words it as "net weer in gebruik".
 - Saves that state in a Docker volume, so a restart carries on where it stopped.
 - Publishes to Cloudflare when the set of broken lifts changes (at most every 2 minutes), and at least every 10 minutes, so the site can see it's alive.
 - Never publishes something implausible: no full status yet, fewer than 300 lifts, or more than half out. The site then shows the last good status until it's too old, and after that "unknown".
@@ -44,7 +45,7 @@ docker compose logs -f  # Ctrl+C stops watching; the listener keeps running
 
 In the log you should see `connected to tcp://pubsub.besteffort.ndovloket.nl:7666`.
 
-**Until the first full status arrives, it doesn't publish.** That happens at around 04:02 at night. Before then it logs `not publishing: no full state yet`, which is expected. After that, it logs `published: 50 of 443 lifts out` whenever a lift changes (at most every 2 minutes), and at least every 10 minutes.
+**Until the first full status arrives, it doesn't publish.** That happens at around 04:02 at night. Before then it logs `not publishing: no full state yet`, which is expected. After that, it logs `published: 50 of 443 lifts out, 1 just back` whenever a lift changes (at most every 2 minutes), and at least every 10 minutes.
 
 To test without publishing, put `DRY_RUN=1` in `.env`: it then writes `/data/lifts.json` inside the volume instead.
 

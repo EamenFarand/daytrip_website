@@ -46,7 +46,7 @@ And the live lift status from `/api/lifts`. In production that's `functions/api/
 |---|---|
 | `src/main.ts` | Wires everything: loads data, keeps the state, renders on change. |
 | `src/state.ts` | The chosen origin (in the path, `/station/<slug>/`) and filters (in the hash, `#overstap=2&max=alles`); defaults are left out, and old `#van=` links still work. |
-| `src/lifts.ts` | How fresh the lift status is, and which lifts out matter for a journey (the tracks it uses). |
+| `src/lifts.ts` | How fresh the lift status is, which lifts out matter for a journey (the tracks it uses), and the words for each status (out, unknown, just back). |
 | `src/results.ts` | Turns an origin file plus the filters into one verdict per station (reachable, out of reach, not step-free, unknown). |
 | `src/search.ts` | Station search that tolerates typos, accents and shorthand ("Utrecht CS", "A'dam", "Den Bosch"). |
 | `src/combobox.ts` | The search box, following the WAI-ARIA combobox pattern. |

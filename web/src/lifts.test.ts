@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { freshness, freshnessText, journeyWarnings, outAt } from "./lifts";
+import { freshness, freshnessText, journeyWarnings, liftNote, outAt, statusText, warnLine } from "./lifts";
 import type { LiftStatus, Station } from "./types";
 
 const st = (code: string, lifts: string[] = []): Station => ({
@@ -51,5 +51,19 @@ describe("lift status", () => {
     expect(codes("2|?|5|3")).toEqual(["O:vertrek", "UT:overstap"]); // an unknown track counts
     const UThall = hall("UT", "u1");
     expect(journeyWarnings([40, 40, 2, 1, "UT", "2|1|1|3"], st("O"), D, new Map([["UT", UThall]]), LIFTS, "live")).toEqual([]);
+  });
+
+  it("a lift that has just come back still warns, in its own words", () => {
+    const UT = st("UT", ["u1", "b1"]), D = st("D", ["b2"]);
+    const lifts: LiftStatus = {
+      ...LIFTS,
+      out: [...LIFTS.out, { id: "b1", status: "back", since: "2026-10-02T11:43:00Z", until: null }, { id: "b2", status: "back", since: "2026-10-02T11:50:00Z", until: null }],
+    };
+    const b1 = outAt(UT, lifts, "live").find((o) => o.lift.id === "b1")!;
+    expect(statusText(b1)).toMatch(/^sinds \d\d:\d\d weer in gebruik, maar was net nog buiten gebruik$/); // local time
+    const w = journeyWarnings([40, 40, 2, 1, "UT"], st("O"), D, new Map([UT, D].map((s) => [s.code, s])), lifts, "live");
+    expect(w.map(liftNote)).toEqual(["⚠ lift buiten gebruik", "⚠ lift net weer in gebruik"]); // at UT one is out, one back
+    expect(warnLine(w)).toBe("⚠ Liftstoring: UT; lift net weer in gebruik: D");
+    expect(warnLine(w.slice(1))).toBe("⚠ Lift net weer in gebruik: D");
   });
 });

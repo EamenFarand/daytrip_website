@@ -8,6 +8,8 @@ which the site reads through functions/api/lifts.js. Runs in Docker on Daan's ho
 - Every lift keeps its open conditions. The full state that arrives every night (~04:02 CEST)
   replaces them all; a change message adds to one lift. A lift can have several open conditions
   at once; its status now is the one that started last among those valid now.
+- A lift that came back less than 30 minutes ago is still listed, as "back": in the audit's 72-hour log,
+  3 in 10 lifts that came back were out again within the hour (docs/DECISIONS.md, 2026-10-04).
 - The state is saved after every status message, so a restart carries on where it stopped.
 - lifts.json goes out when the lifts that are out change (at most every 2 minutes), and at least
   every 10 minutes, so its timestamps show the listener is alive. An implausible state is never
@@ -39,6 +41,7 @@ MAX_OUT_SHARE = 0.5  # ...or with more than half of them out: then something is 
 PUBLISH_MIN = timedelta(minutes=2)
 PUBLISH_MAX = timedelta(minutes=10)
 RECONNECT_AFTER = timedelta(minutes=30)  # heartbeats normally come every 10 minutes
+HOLD = timedelta(minutes=30)  # a lift that came back is listed as "back" this long
 USER_AGENT = "trapvrij-lifts/0.1 (+https://trapvrij.nl)"
 
 log = logging.getLogger("lifts")
@@ -78,6 +81,7 @@ class State:
     lifts: dict[str, list[dict]] = field(default_factory=dict)  # lift id -> its open conditions
     full_state_at: datetime | None = None
     last_message_at: datetime | None = None  # last status message; heartbeats don't count
+    last_out: dict[str, str] = field(default_factory=dict)  # lift id -> when it was last seen out, for HOLD
 
     def apply(self, conditions: list[dict], now: datetime) -> None:
         if not conditions:
@@ -99,11 +103,16 @@ class State:
         return max(valid, key=lambda c: c["start"] or "") if valid else {"status": "unknown", "start": None, "end": None}
 
     def payload(self, now: datetime) -> dict:
+        """What the site gets. Also notes which lifts are out now, so one that comes back is listed as "back" for HOLD."""
         out = []
         for lift_id in sorted(self.lifts):
             c = self.current(lift_id, now)
             if c["status"] != "available":
+                self.last_out[lift_id] = _iso(now)
                 out.append({"id": lift_id, "status": c["status"], "since": _iso(_time(c["start"])), "until": _iso(_time(c["end"]))})
+            elif (seen := _time(self.last_out.get(lift_id))) and now - seen < HOLD:
+                out.append({"id": lift_id, "status": "back", "since": _iso(seen), "until": None})
+        self.last_out = {k: t for k, t in self.last_out.items() if now - _time(t) < HOLD}
         return {
             "v": 1,
             "updated": _iso(now),
@@ -115,7 +124,7 @@ class State:
 
     def save(self, path: Path) -> None:
         tmp = path.with_name(path.name + ".tmp")
-        tmp.write_text(json.dumps({"lifts": self.lifts, "full_state_at": _iso(self.full_state_at), "last_message_at": _iso(self.last_message_at)}))
+        tmp.write_text(json.dumps({"lifts": self.lifts, "full_state_at": _iso(self.full_state_at), "last_message_at": _iso(self.last_message_at), "last_out": self.last_out}))
         tmp.replace(path)
 
     @classmethod
@@ -123,7 +132,7 @@ class State:
         if not path.exists():
             return cls()
         d = json.loads(path.read_text())
-        return cls(d["lifts"], _time(d["full_state_at"]), _time(d["last_message_at"]))
+        return cls(d["lifts"], _time(d["full_state_at"]), _time(d["last_message_at"]), d.get("last_out", {}))
 
 
 def problem(payload: dict) -> str | None:
@@ -132,8 +141,9 @@ def problem(payload: dict) -> str | None:
         return "no full state yet (it arrives every night around 04:02)"
     if payload["lifts"] < MIN_LIFTS:
         return f"only {payload['lifts']} lifts known"
-    if len(payload["out"]) > MAX_OUT_SHARE * payload["lifts"]:
-        return f"{len(payload['out'])} of {payload['lifts']} lifts out"
+    out = [o for o in payload["out"] if o["status"] != "back"]
+    if len(out) > MAX_OUT_SHARE * payload["lifts"]:
+        return f"{len(out)} of {payload['lifts']} lifts out"
     return None
 
 
@@ -212,7 +222,8 @@ def main() -> None:
                 else:
                     try:
                         publisher.publish(payload, now)
-                        log.info("published: %d of %d lifts out", len(payload["out"]), payload["lifts"])
+                        back = sum(1 for o in payload["out"] if o["status"] == "back")
+                        log.info("published: %d of %d lifts out, %d just back", len(payload["out"]) - back, payload["lifts"], back)
                     except requests.RequestException as e:
                         log.warning("publishing failed: %s", e)
             if now - seen > RECONNECT_AFTER:

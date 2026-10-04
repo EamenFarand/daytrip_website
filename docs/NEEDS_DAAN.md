@@ -6,16 +6,17 @@ Everything that needs you, batched. Open items first; answered items are kept at
 
 ## Open
 
-The site is live at **<https://trapvrij.nl>**, with DNSSEC and the live lift status. Nothing from you blocks v1. Item 1 is a choice I'd like you to make.
+The site is live at **<https://trapvrij.nl>**, with DNSSEC and the live lift status. Nothing from you blocks v1. Item 1 takes a minute.
 
-### 1. Decide: keep a softer warning when a lift has just come back? *(my advice: yes)*
+### 1. Update the lift listener on your server *(about 2 minutes)*
 
-The lift feed flips a lot. In the 72-hour log, 3 in 10 lifts that came back into service were out again within the hour, and some flip dozens of times a day (Arnhem Centraal, Haarlem Spaarnwoude). The site follows the feed, so such a lift's warning comes and goes, and in between the lift looks fine. Now and then that's a wrong "yes" (principle 1).
+The site now knows about lifts that have just come back (your choice A). The listener on your server still needs the new code to send them. On the server:
 
-- **A (advice):** after a lift comes back, the site keeps a softer warning for 30 minutes, e.g. "sinds 21:43 weer in gebruik, maar was net nog buiten gebruik". That's one or two lifts at a time, next to the 50 or so that are out. Afterwards you update the listener once, with one command.
-- **B:** leave it as is: the site shows exactly what the feed says.
+```bash
+cd ~/trapvrij && git pull && cd lifts && docker compose up -d --build
+```
 
-Tell me A or B.
+Then, after a few minutes, `docker compose logs --tail 5`. The lines now end in `, … just back`, e.g. `published: 50 of 443 lifts out, 1 just back`. Tell me, and I'll check the site.
 
 ### 2. Optional: send NDOV Loket two questions
 
@@ -94,5 +95,6 @@ Reporting them helps everyone who uses this data (the NS app, 9292…). If you w
 - **2026-10-03, Bing:** Daan imported the site from Search Console into Bing Webmaster Tools, which also covers DuckDuckGo and Ecosia.
 - **2026-10-03, Nextcloud:** `.git`, `node_modules`, `.venv` and `.env` are on the client's ignore list (checked in its `sync-exclude.lst`), so the generated folders and the local settings file no longer sync.
 - **2026-10-04, lift listener:** runs on Daan's server since 3 Oct (setup and commands: `lifts/README.md`). The full status arrived on 4 Oct at 04:02, and since then it publishes every few minutes, e.g. 50 of 443 lifts out. Checked on the live site: `/api/lifts` serves it, station panels list the lifts that are out with the time of the status, and 10 of Houten's destinations show a warning.
+- **2026-10-04, lifts that flip:** option A. A lift that has just come back keeps a softer warning for 30 minutes ("sinds 21:43 weer in gebruik, maar was net nog buiten gebruik"). DECISIONS.md, 2026-10-04.
 - **2026-10-02, Phase 3:** go (after the softer dark mode).
 - **2026-10-02, lift logger:** stopped after 71 hours with all three nightly snapshots, and analysed (audit/REPORT.md Q5). The log moved out of Nextcloud to the cache folder.

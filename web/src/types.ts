@@ -66,5 +66,5 @@ export interface LiftStatus {
   full_state_at: string | null; // the last nightly full status (~04:02)
   last_message_at: string | null; // the last status message of any kind
   lifts: number;
-  out: { id: string; status: string; since: string | null; until: string | null }[];
+  out: { id: string; status: string; since: string | null; until: string | null }[]; // status "back": working again < 30 min
 }
