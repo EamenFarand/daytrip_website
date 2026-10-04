@@ -6,72 +6,16 @@ Everything that needs you, batched. Open items first; answered items are kept at
 
 ## Open
 
-The site is live at **<https://trapvrij.nl>**, with DNSSEC. Item 1 is what's left from you for v1: confirming the lift listener publishes.
+The site is live at **<https://trapvrij.nl>**, with DNSSEC and the live lift status. Nothing from you blocks v1. Item 1 is a choice I'd like you to make.
 
-### 1. Run the lift listener on your home server
+### 1. Decide: keep a softer warning when a lift has just come back? *(my advice: yes)*
 
-**Status 3 Oct:** the listener runs on your server since 10:02 (log: connected, waiting for the full status), and the store `trapvrij-lifts` is connected to the site (`wrangler.toml`; `/api/lifts` answers 404 = connected but empty). **Left:** after about 04:02 tonight, check that the log says `published: …` (part B, step 6) and tell me; I'll check the site.
+The lift feed flips a lot. In the 72-hour log, 3 in 10 lifts that came back into service were out again within the hour, and some flip dozens of times a day (Arnhem Centraal, Haarlem Spaarnwoude). The site follows the feed, so such a lift's warning comes and goes, and in between the lift looks fine. Now and then that's a wrong "yes" (principle 1).
 
-The code is ready: [lifts/README.md](../lifts/README.md). CI checks that its Docker image builds. Until it runs, the site says the lift status is unknown.
+- **A (advice):** after a lift comes back, the site keeps a softer warning for 30 minutes, e.g. "sinds 21:43 weer in gebruik, maar was net nog buiten gebruik". That's one or two lifts at a time, next to the 50 or so that are out. Afterwards you update the listener once, with one command.
+- **B:** leave it as is: the site shows exactly what the feed says.
 
-**Part A, in the Cloudflare dashboard** (any computer):
-1. **Create the store.**
-   1. In the left menu, open *Storage & Databases → Workers KV* (in some versions it's under *Workers & Pages → KV*).
-   2. Click *Create* and name it `trapvrij-lifts`.
-   3. Copy its **ID**: 32 letters and digits, shown in the list of stores.
-2. **Create the second key** (a separate one; leave the deploy key alone):
-   1. Click your profile icon at the top right, then *My Profile → API Tokens → Create Token*.
-   2. At the bottom, under *Custom token*, click *Get started*.
-   3. *Token name:* `trapvrij-lifts-writer`.
-   4. *Permissions:* one row, chosen from the three dropdowns: **Account** · **Workers KV Storage** · **Edit**. Nothing else.
-   5. *Account Resources:* **Include** · your account.
-   6. *Client IP Address Filtering:* leave it empty. Your home IP can change, and the listener would then stop.
-   7. *TTL:* leave it empty, so the key doesn't expire.
-   8. Click *Continue to summary → Create Token*, and copy the token right away; it's only shown once. Keep it for part B. It goes only into the settings file on your server, never into GitHub or this chat.
-3. **Send me the store's ID** (not the token). The ID isn't secret. I'll connect the store to the site.
-
-**Part B, on the server** (in a terminal on the machine itself, or over SSH):
-1. **Check that git and Docker are there:**
-   ```bash
-   git --version && docker --version && docker compose version
-   ```
-   - If `docker compose` isn't found but `docker-compose` is, use `docker-compose` (with a dash) in the commands below.
-   - If Docker says *permission denied*, put `sudo` in front of each docker command.
-2. **Get the code** (the repo is public, so no login is needed). Your home folder is fine:
-   ```bash
-   cd ~
-   git clone https://github.com/EamenFarand/daytrip_website.git trapvrij
-   cd trapvrij/lifts
-   ```
-3. **Fill in the settings:**
-   ```bash
-   cp .env.example .env
-   nano .env
-   ```
-   Fill in the three lines, with no spaces around the `=`:
-   - `CF_ACCOUNT_ID`: the same Account ID you put in GitHub. Cloudflare also shows it on *Workers & Pages* (right-hand side) and in the dashboard's web address.
-   - `CF_KV_NAMESPACE_ID`: the store's ID from part A.1.
-   - `CF_API_TOKEN`: the token from part A.2.
-
-   Save with Ctrl+O and Enter, then close with Ctrl+X. Then, so only you can read the file:
-   ```bash
-   chmod 600 .env
-   ```
-4. **Start it:**
-   ```bash
-   docker compose up -d --build
-   ```
-   The first time takes a minute or two, while it builds the image.
-5. **Watch it work:**
-   ```bash
-   docker compose logs -f
-   ```
-   Ctrl+C stops watching; the listener keeps running. You should see:
-   - `connected to tcp://pubsub.besteffort.ndovloket.nl:7666`;
-   - then, every few minutes until about 04:02 the next night, `not publishing: no full state yet`. That's expected: it waits for the nightly full status.
-6. **The next morning,** run `docker compose logs --tail 20` (in `~/trapvrij/lifts`). You should see `full state: … lifts` and then `published: … of … lifts out` about every 10 minutes. Tell me, and I'll check the site.
-
-It restarts by itself after a crash or a reboot, as long as Docker itself starts at boot. That's the default on most systems; if not, `sudo systemctl enable docker`. To update later: `cd ~/trapvrij && git pull && cd lifts && docker compose up -d --build`.
+Tell me A or B.
 
 ### 2. Optional: send NDOV Loket two questions
 
@@ -139,7 +83,7 @@ Reporting them helps everyone who uses this data (the NS app, 9292…). If you w
 - **2026-10-02, Cloudflare:** both GitHub secrets are set.
   - Checked with the workflow *Check Cloudflare secrets*: the token is an active user token, and it may manage Pages in the account (0 projects so far).
   - Re-run that workflow from the Actions tab whenever you replace the token.
-- **2026-10-02, live lift status:** option (b), a listener in Docker on Daan's home server (Linux, always on). A second Cloudflare key and the small Cloudflare function are fine. Logged in DECISIONS.md; PLAN.md and CLAUDE.md updated. Setup steps: item 1.
+- **2026-10-02, live lift status:** option (b), a listener in Docker on Daan's home server (Linux, always on). A second Cloudflare key and the small Cloudflare function are fine. Logged in DECISIONS.md; PLAN.md and CLAUDE.md updated. Setup steps: `lifts/README.md`.
 - **2026-10-03, trapvrij.nl connected:** Daan added the domain to the Pages project and a www-to-root redirect. Checked: https://trapvrij.nl serves the site, and www and http redirect to it. The deploy now checks trapvrij.nl.
 - **2026-10-03, DNSSEC:** on again. Daan entered Cloudflare's key at TransIP; the registry accepted it at 11:52 and published it at 12:21 (Dutch time). Checked from outside: the DS record on all .nl servers matches Cloudflare's signing key (key tag 2371, algorithm 13), and Google's and Cloudflare's resolvers validate trapvrij.nl and www.
   - **If you ever move the domain away from Cloudflare, or turn DNSSEC off there:** first remove the key at TransIP (*Beheer → DNSSEC-instellingen*), wait a day, and only then make the change. The other way round, the site is unreachable for a large share of visitors until the registry catches up.
@@ -149,5 +93,6 @@ Reporting them helps everyone who uses this data (the NS app, 9292…). If you w
 - **2026-10-03, Google Search Console:** the domain property is verified (DNS TXT record), and Daan submitted the sitemap. Check indexing around 17 Oct (PLAN.md, housekeeping).
 - **2026-10-03, Bing:** Daan imported the site from Search Console into Bing Webmaster Tools, which also covers DuckDuckGo and Ecosia.
 - **2026-10-03, Nextcloud:** `.git`, `node_modules`, `.venv` and `.env` are on the client's ignore list (checked in its `sync-exclude.lst`), so the generated folders and the local settings file no longer sync.
+- **2026-10-04, lift listener:** runs on Daan's server since 3 Oct (setup and commands: `lifts/README.md`). The full status arrived on 4 Oct at 04:02, and since then it publishes every few minutes, e.g. 50 of 443 lifts out. Checked on the live site: `/api/lifts` serves it, station panels list the lifts that are out with the time of the status, and 10 of Houten's destinations show a warning.
 - **2026-10-02, Phase 3:** go (after the softer dark mode).
 - **2026-10-02, lift logger:** stopped after 71 hours with all three nightly snapshots, and analysed (audit/REPORT.md Q5). The log moved out of Nextcloud to the cache folder.

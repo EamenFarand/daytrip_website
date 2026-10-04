@@ -15,9 +15,23 @@ Why it works this way: `docs/DECISIONS.md` (2026-10-02) and `audit/REPORT.md` Q5
 - Never publishes something implausible: no full status yet, fewer than 300 lifts, or more than half out. The site then shows the last good status until it's too old, and after that "unknown".
 - Only makes outgoing connections; nothing on your network is opened up.
 
+## Cloudflare: the store and its key
+
+Done once, on 3 Oct 2026. Repeat step 2 only to replace the key.
+
+1. **The store:** in the Cloudflare dashboard, *Storage & Databases → Workers KV → Create*, named `trapvrij-lifts`. Its ID goes in `.env` here, and in `wrangler.toml` at the repo root (binding `LIFTS`), which connects it to the site.
+2. **The key:** profile icon → *My Profile → API Tokens → Create Token*, then *Custom token*:
+   - name `trapvrij-lifts-writer`;
+   - permissions: one row, **Account · Workers KV Storage · Edit**, nothing else;
+   - account resources: your account;
+   - no IP filter (a home IP can change) and no expiry.
+
+   Copy it at once; it's shown only once, and it goes only in `.env` on the server.
+3. **The account ID:** on *Workers & Pages* (right-hand side), and in the dashboard's web address.
+
 ## Install (Linux with Docker)
 
-You need the Cloudflare account ID, the key-value store's ID and its key (see `docs/NEEDS_DAAN.md`).
+You need the three values from the section above.
 
 ```bash
 git clone https://github.com/EamenFarand/daytrip_website.git trapvrij
@@ -30,7 +44,7 @@ docker compose logs -f  # Ctrl+C stops watching; the listener keeps running
 
 In the log you should see `connected to tcp://pubsub.besteffort.ndovloket.nl:7666`.
 
-**Until the first full status arrives, it doesn't publish.** That happens at around 04:02 at night. Before then it logs `not publishing: no full state yet`, which is expected. After that, it logs `published: 56 of 443 lifts out` about every 10 minutes.
+**Until the first full status arrives, it doesn't publish.** That happens at around 04:02 at night. Before then it logs `not publishing: no full state yet`, which is expected. After that, it logs `published: 50 of 443 lifts out` whenever a lift changes (at most every 2 minutes), and at least every 10 minutes.
 
 To test without publishing, put `DRY_RUN=1` in `.env`: it then writes `/data/lifts.json` inside the volume instead.
 
@@ -43,7 +57,7 @@ To test without publishing, put `DRY_RUN=1` in `.env`: it then writes `/data/lif
 | Update after a change in the repo | `git pull && docker compose up -d --build` |
 | Stop | `docker compose down` (the saved state stays in the volume) |
 
-It restarts by itself after a crash or a reboot (`restart: unless-stopped`).
+It restarts by itself after a crash or a reboot (`restart: unless-stopped`). Log times are UTC: Dutch time minus 2 hours in summer, minus 1 in winter.
 
 ## Development
 
