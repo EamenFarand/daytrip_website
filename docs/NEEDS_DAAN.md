@@ -54,6 +54,7 @@ Reporting them helps everyone who uses this data (the NS app, 9292…). If you w
 ### 5. Good to know
 
 - **Old copies on the Nextcloud server:** the generated folders that synced before (about 330 MB) are still there. Delete them in the web interface only if you need the space. The client now ignores them, so the deletion won't reach your PC.
+- **If GitHub emails that "Build and deploy" failed:** the site keeps working with the last good data; a failed run publishes nothing. One failure can be a hiccup (a source briefly down). If it keeps failing, tell me and I'll look. That happened on 6–7 Oct: works at Wolfheze fell on the days the build had picked (fixed, DECISIONS 2026-10-07).
 - **If GitHub emails that "Build and deploy" was disabled:** GitHub pauses scheduled workflows in a public repo after 60 days without new commits. To restart it, open the repo's *Actions* tab, choose *Build and deploy*, and click *Enable workflow*. Until then the site keeps working, but with the data from the last build.
 
 ---
