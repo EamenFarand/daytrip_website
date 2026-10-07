@@ -108,6 +108,16 @@ def station_calls(trips: pl.DataFrame, nl_codes: set[str]) -> pl.DataFrame:
     )
 
 
+def timetable_change(today: date) -> date:
+    """The next yearly timetable change: the Sunday after the second Saturday of December (the European rule)."""
+    for year in (today.year, today.year + 1):
+        dec1 = date(year, 12, 1)
+        change = dec1 + timedelta(days=(5 - dec1.weekday()) % 7 + 8)  # first Saturday, then the Sunday a week later
+        if change > today:
+            return change
+    raise AssertionError("unreachable")
+
+
 def choose_days(calls: pl.DataFrame, trips: pl.DataFrame, dates: pl.DataFrame, today: date,
                 horizon_days: int = 56) -> dict[str, date]:
     """Pick the Tue/Wed/Thu and the Saturday with the most normal service in the next eight weeks.
@@ -118,6 +128,8 @@ def choose_days(calls: pl.DataFrame, trips: pl.DataFrame, dates: pl.DataFrame, t
     into two trips, so on 27-29 Oct 2026 the days with the most trips were the ones with Wolfheze closed.
     Eight weeks, because weekend works are common: no Saturday in the four weeks after 7 Oct 2026 was clean.
     Ties go to the earliest date.
+    Days in the timetable that's running come first, as long as it has one: before mid-December the feed
+    can already hold next year's timetable, and its days (often with more trains) would otherwise win.
     """
     per_day = (
         calls.join(trips.select("trip_id", "service_id"), on="trip_id")
@@ -133,9 +145,12 @@ def choose_days(calls: pl.DataFrame, trips: pl.DataFrame, dates: pl.DataFrame, t
         .agg(pl.col("station").n_unique().alias("stations"), pl.len().alias("calls"))
         .with_columns(pl.col("date").dt.weekday().alias("dow"))  # 1 = Monday
     )
+    change = timetable_change(today)
     out = {}
     for name, dows in (("weekday", [2, 3, 4]), ("saturday", [6])):
-        c = score.filter(pl.col("dow").is_in(dows)).sort(["stations", "calls", "date"], descending=[True, True, False])
+        c = score.filter(pl.col("dow").is_in(dows))
+        running = c.filter(pl.col("date") < change)
+        c = (running if not running.is_empty() else c).sort(["stations", "calls", "date"], descending=[True, True, False])
         if c.is_empty():
             raise RuntimeError(f"no {name} in the feed within {horizon_days} days of {today}")
         out[name] = c["date"][0]

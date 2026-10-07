@@ -60,8 +60,8 @@ Search Console: domain verified and sitemap submitted on 3 Oct.
 4. Done 4 Oct: the lift text in the about box (PLAN.md, housekeeping).
 5. **About two weeks after the sitemap (around 17 Oct):** ask Daan for Search Console's indexing report and fix what it flags (PLAN.md, housekeeping).
 6. **v1 definition of done:** nightly pipeline green for 7 consecutive days, counted once the domain is live. 3–5 Oct and the 6 Oct morning run were green; the 6 Oct evening and 7 Oct runs failed (Wolfheze closed on the chosen days; fixed 7 Oct, DECISIONS). The count starts again from the first green day after the fix.
-7. **GitHub limits:**
-   - Scheduled workflows in a public repo pause after 60 days without repo activity: add a keep-alive, or note it for Daan.
+7. Done 7 Oct, **GitHub limits:**
+   - Scheduled workflows in a public repo pause after 60 days without repo activity. We decided against a keep-alive (DECISIONS 2026-10-07); the one-click fix is in NEEDS_DAAN.
    - `ubuntu-latest` moves to Ubuntu 26 from 19 Oct; we pin `ubuntu-24.04`.
 8. Then stop and summarise Phase 3 for Daan.
 
@@ -73,7 +73,7 @@ Search Console: domain verified and sitemap submitted on 3 Oct.
 - **Phase 0**: data audit, verdict Go. See `audit/REPORT.md`, including Q5 on the 72-hour lift log.
 - **Phase 1**, in `pipeline/` (see `pipeline/README.md`):
   - `uv run python -m stepfree.build` builds `meta.json`, `stations.json` and 395 `origins/<CODE>.json` in about 2 minutes on 4 cores, 44 MB.
-  - Router: platform-level range RAPTOR, with the stroller profile enforced during the search, both train sets, 08:30–12:00, 0/1/2 changes. The days are re-chosen each build: the Tue/Wed/Thu and the Saturday with the most regular stations served, then the most stops, within eight weeks (DECISIONS 2026-10-07). Now Wed 4 Nov and Sat 21 Nov.
+  - Router: platform-level range RAPTOR, with the stroller profile enforced during the search, both train sets, 08:30–12:00, 0/1/2 changes. The days are re-chosen each build: the Tue/Wed/Thu and the Saturday with the most regular stations served, then the most stops, within eight weeks and within the timetable that's running (it changes on 13 Dec 2026; DECISIONS 2026-10-07). Now Wed 4 Nov and Sat 21 Nov.
   - More options never look worse: each entry is the best of its own and those with fewer options.
   - Validation runs on the raw router output (more options never slower) and on the files (structure, typical time, page names, tracks, known answers).
   - Tests: `uv run pytest`, 60 passing and 1 skipped (NS API).

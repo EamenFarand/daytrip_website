@@ -4,6 +4,29 @@ One entry per non-obvious decision: what, why, and what was rejected. Newest on 
 
 ---
 
+### 2026-10-07 — Reference days stay in the timetable that's running
+**What:** The build picks reference days from before the next yearly timetable change, as long as this year's timetable still has a Tue/Wed/Thu (or a Saturday) left. Only then does it take days from the new one. The change is on the Sunday after the second Saturday of December (the European rule), so 13 Dec 2026.
+
+**Why:** The feed now ends on 12 Dec 2026, the last day of this year's timetable. When next year's timetable is added (probably in November), its days will often have more trains and win on "most stops". The site would then show, for weeks, a timetable that isn't running yet.
+
+**Rejected:**
+- *Each day's own timetable (Daan asked).*
+  - GitHub starts the scheduled builds 5–7 hours late: this week around 14:00 and 22:30 Dutch time, after the 08:30–12:00 window they would describe.
+  - On days with works, the checks that stop broken data would trip and block the update, as on 6–7 Oct.
+  - A missed run would leave yesterday's day on the site.
+  - For the actual day, the NS planner link covers works.
+- *Detecting the change from the data.* The rule is fixed and simpler.
+
+### 2026-10-07 — No automatic keep-alive for the scheduled builds
+**What:** GitHub pauses scheduled workflows in a public repo after 60 days without activity. We don't work around that; NEEDS_DAAN ("Good to know") explains the one-click fix.
+
+**Why:**
+- GitHub doesn't document that re-enabling a workflow through its API resets the 60 days.
+- The trick known to work, automatic dummy commits, gets around GitHub's own rule, and GitHub reportedly took down a popular keep-alive tool that did it. That's not worth a risk to Daan's account.
+- While the project is being worked on, commits keep the schedule alive anyway.
+
+**Rejected:** the enable API (unverified); dummy commits; a daily trigger from the home server. The trigger is possible later if the project goes quiet for months, but it needs a GitHub token on the server.
+
 ### 2026-10-07 — An English version under /en/, with a language switch
 **What:** Daan's request. Every page has an English twin under `/en/`: the home page, `/en/station/<slug>/` and `/en/station/`. A switch in the header ("NL | EN", the current language filled in) leads to the same page and view in the other language. Dutch stays the default at `/`.
 

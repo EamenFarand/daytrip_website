@@ -4,7 +4,7 @@ from datetime import date, timedelta
 
 import polars as pl
 
-from stepfree.gtfs import choose_days
+from stepfree.gtfs import choose_days, timetable_change
 
 TODAY = date(2026, 10, 7)  # a Wednesday
 LINE = [["A", "B", "W", "C"], ["C", "W", "B", "A"]]  # two through trains
@@ -38,6 +38,22 @@ def test_a_day_with_a_station_closed_loses_even_with_more_trips():
 def test_event_only_stops_do_not_count():
     calls, trips, dates = feed({"normal": (ALL, LINE), "match": ([date(2026, 10, 14)], [["STADION"]])})
     assert choose_days(calls, trips, dates, TODAY)["weekday"] == date(2026, 10, 8)  # not the match day
+
+
+def test_the_yearly_timetable_change_is_the_sunday_after_the_second_saturday_of_december():
+    assert [timetable_change(date(y, 6, 1)) for y in (2023, 2024, 2025, 2026)] == [
+        date(2023, 12, 10), date(2024, 12, 15), date(2025, 12, 14), date(2026, 12, 13)]
+    assert timetable_change(date(2026, 12, 13)) == date(2027, 12, 12)  # on the day itself: the next one
+
+
+def test_stays_in_the_running_timetable_while_it_has_a_day_left():
+    old = span(date(2026, 11, 26), date(2026, 12, 12))
+    new = span(date(2026, 12, 13), date(2027, 1, 20))
+    more = LINE + [["A", "B", "W", "C"]]  # next year's timetable has an extra train, so its days have more calls
+    calls, trips, dates = feed({"old": (old, LINE), "new": (new, more)})
+    assert choose_days(calls, trips, dates, date(2026, 11, 25)) == {"weekday": date(2026, 11, 26), "saturday": date(2026, 11, 28)}
+    # Friday 11 Dec: no Tue/Wed/Thu left in this year's timetable, but its last Saturday is
+    assert choose_days(calls, trips, dates, date(2026, 12, 11)) == {"weekday": date(2026, 12, 15), "saturday": date(2026, 12, 12)}
 
 
 def test_looks_eight_weeks_ahead_for_a_saturday_without_works():
