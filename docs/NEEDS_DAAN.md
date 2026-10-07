@@ -6,9 +6,40 @@ Everything that needs you, batched. Open items first; answered items are kept at
 
 ## Open
 
-The site is live at **<https://trapvrij.nl>**, with DNSSEC and the live lift status. Nothing from you is open for v1; the items below are optional or waiting on others.
+The site is live at **<https://trapvrij.nl>**, with DNSSEC and the live lift status. Nothing from you is open for v1. Item 1 is a decision on a new feature; the rest are optional or waiting on others.
 
-### 1. Optional: send NDOV Loket two questions
+### 1. Decide: trains without steps from NS's own data (ICNG intercities)
+
+You asked on 7 Oct whether intercities that run as ICNG (no steps) can count as trains without steps.
+- **The timetables don't say which train type runs a trip** (neither the GTFS feed nor NS's IFF).
+- **The type varies per train, even on one route.** On IC 700 (Schiphol–Groningen), one train was an ICNG and the next an ICM, which has steps.
+
+**NS's own journey messages do say it.** They come as InfoPlus via NDOV Loket: open data (CC0), from the same provider as the lift status. They give every train unit NS's flag "toegankelijk" (J/N). In a 3-minute sample on 7 Oct:
+- **J (accessible):**
+  - all Sprinters (SLT, SNG, Flirt) and most regional trains;
+  - the ICNG on IC 500, IC 1100 and Intercity direct.
+- **N (not accessible):**
+  - VIRM, ICM and DDZ;
+  - the ICNG that runs to Brussels;
+  - some regional trains the site now counts as step-free: Arriva Zutphen–Oldenzaal and Almelo–Hardenberg (LINT), one Emmen–Zwolle train, and NMBS Roosendaal–Antwerpen.
+
+**Proposal:**
+1. **The listener records it.** The lift listener also follows these messages: one extra connection, which is within fair use. It keeps four weeks of which train number ran with all units accessible, per day.
+2. **The build only trusts what's consistent.**
+   - A train counts as "without steps" only when NS marked all its units accessible on every day it was seen.
+   - An intercity needs at least 3 such days of the same day type (weekday or Saturday).
+   - A train seen even once with a unit marked N doesn't count.
+   - Without the data, the build works as today.
+3. **The site says so.**
+   - The option becomes "Treinen zonder trapjes": sprinters, stopping trains and intercities that run as ICNG.
+   - A journey that uses such an intercity says so, with a note that NS sometimes runs another train.
+4. **You update the listener on the server**, with the same steps as last time.
+   - After 1–2 weeks of data, the ICNG trains appear.
+   - More appear automatically as NS adds ICNGs.
+
+**Your call:** go or not.
+
+### 2. Optional: send NDOV Loket two questions
 
 Even an always-on listener can't fix a silent feed. On 2 October no lift changes arrived from 00:55 until at least 20:28, while the feed's heartbeats and the 04:02 full state kept coming. If you want, send this (contact details on <https://ndovloket.nl>):
 
@@ -24,7 +55,7 @@ Even an always-on listener can't fix a silent feed. On 2 October no lift changes
 > Met vriendelijke groet,
 > Daan
 
-### 2. Optional: desk check of 3 doubtful stations
+### 3. Optional: desk check of 3 doubtful stations
 
 The data calls these step-free, but another source says no and nothing in the lift/ramp register supports "yes". Until checked, they are **unknown** (not step-free), so doing nothing is safe. If you ever pass one, a look would settle it:
 
@@ -32,7 +63,7 @@ The data calls these step-free, but another source says no and nothing in the li
 - **Rotterdam Stadion**: event-only station; is there a step-free route?
 - **Diemen Zuid**: is the lift to the train platform in service (the register says "project")?
 
-### 3. NS API key: waiting for NS's approval *(not blocking)*
+### 4. NS API key: waiting for NS's approval *(not blocking)*
 
 You requested the travel information API ("Reisinformatie API"); that's the right one. It's only needed for an extra accuracy check, so nothing waits on it. When approved:
 
@@ -41,7 +72,7 @@ You requested the travel information API ("Reisinformatie API"); that's the righ
 3. Replace the line `# NS_API_KEY=   <- add your ...` with `NS_API_KEY=<your key>`, with no `#` in front.
 4. Tell me it's there. **Don't paste the key in chat.** I'll then run the comparison of ~20 routes against the NS journey planner.
 
-### 4. Decide (optional): report data errors to DOVA?
+### 5. Decide (optional): report data errors to DOVA?
 
 Anomalies found so far:
 - Blerick: two tracks on one island platform disagree.
@@ -51,7 +82,7 @@ Anomalies found so far:
 
 Reporting them helps everyone who uses this data (the NS app, 9292…). If you want that, I'll draft a short email for you to send.
 
-### 5. Good to know
+### 6. Good to know
 
 - **Old copies on the Nextcloud server:** the generated folders that synced before (about 330 MB) are still there. Delete them in the web interface only if you need the space. The client now ignores them, so the deletion won't reach your PC.
 - **If GitHub emails that "Build and deploy" failed:** the site keeps working with the last good data; a failed run publishes nothing. One failure can be a hiccup (a source briefly down). If it keeps failing, tell me and I'll look. That happened on 6–7 Oct: works at Wolfheze fell on the days the build had picked (fixed, DECISIONS 2026-10-07).
@@ -64,7 +95,7 @@ Reporting them helps everyone who uses this data (the NS app, 9292…). If you w
 - **2026-09-29, Phase 0 go/no-go:** Go.
 - **2026-09-29, what counts as a sprinter:** option A, NS Sprinters plus every regional train. Reason: *any train taken must avoid steps inside the train*; IC trains have steps. Logged in DECISIONS.md.
 - **2026-09-29, Houten and Houten Castellum in person:** both *accessible pain-free with a pram*. Recorded in `pipeline/overrides/stations.csv` as verified.
-- **2026-09-29, NS API:** requested the Reisinformatie API; waiting for approval (item 3). Not crucial: continue without it.
+- **2026-09-29, NS API:** requested the Reisinformatie API; waiting for approval (item 4). Not crucial: continue without it.
 - **2026-09-29, Phase 1 review:** go; Phase 2 (the map frontend) next.
 - **2026-09-29, Den Haag Centraal and Groningen:** *all tracks are accessible* (Daan knows both stations). Recorded as corrections (tracks 11–12 and 2–3 had no status in EPIAP).
 - **2026-09-30, Utrecht C: fewer stations with a change allowed:** a bug, fixed. More options now never make a journey look worse (DECISIONS.md).

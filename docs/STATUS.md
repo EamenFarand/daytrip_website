@@ -65,6 +65,10 @@ Search Console: domain verified and sitemap submitted on 3 Oct.
    - `ubuntu-latest` moves to Ubuntu 26 from 19 Oct; we pin `ubuntu-24.04`.
 8. Then stop and summarise Phase 3 for Daan.
 
+**Waiting for Daan (not part of v1):** trains without steps from NS's own data, which would bring in the ICNG intercities (NEEDS_DAAN 1).
+- NS's InfoPlus journey messages (`/RIG/InfoPlusRITInterface5` on `pubsub.besteffort.ndovloket.nl:7664`, CC0) give every train unit a type and NS's flag `MaterieelDeelToegankelijk` (J/N).
+- A 3-minute sample on 7 Oct also flagged some regional trains the site now counts as step-free as "N" (Arriva LINT, NMBS Roosendaal–Antwerpen).
+
 ## Done before
 - **Phase 0**: data audit, verdict Go. See `audit/REPORT.md`, including Q5 on the 72-hour lift log.
 - **Phase 1**, in `pipeline/` (see `pipeline/README.md`):
