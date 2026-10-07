@@ -4,6 +4,20 @@ One entry per non-obvious decision: what, why, and what was rejected. Newest on 
 
 ---
 
+### 2026-10-07 — Reference days: the most stations served, not the most trips
+**What:** The build picks the Tue/Wed/Thu and the Saturday that serve the most *regular* Dutch stations (those with trains on at least half the days), then the most stops at those stations. It looks eight weeks ahead instead of four; ties go to the earliest. This replaces "the most rail trips in four weeks" (2026-09-29).
+
+**Why:**
+- On 6 and 7 Oct two scheduled builds failed. Wolfheze has no trains from 20 to 31 Oct, and the chosen days (29 and 31 Oct) fell in that period, so Wolfheze dropped out of the build and a test caught it. Nothing was published; the site kept the previous build.
+- The old rule walked right into it. Works split through trains into two shorter trips, so 27–29 Oct had the most trips of the month (about 6,590, against about 6,460 on normal days), while Wolfheze and Oosterbeek had no trains at all.
+- Stations served is what matters for this site, and stops don't grow when a train is split.
+- Event-only stops such as Rotterdam Stadion don't count; otherwise a match day would win.
+- Four weeks was too short for Saturdays. Weekend works are common: none of the four Saturdays after 7 Oct was clean. Looking eight weeks ahead, the build picked 4 Nov and 21 Nov, with all 395 stations.
+
+**Also:** the real-data test expecting stations that aren't step-free to be reachable without a pram now skips a station that has no trains on the build's days at all. Such a closure can last longer than the build looks ahead, and it shouldn't block every deploy.
+
+**Rejected:** counting trips (fooled by split trains); comparing each day's train numbers with a typical day (more complex, and harder to explain); a fixed list of dates (goes stale).
+
 ### 2026-10-04 — A lift that has just come back keeps a softer warning for 30 minutes
 **What:** Daan's choice (option A). The listener keeps a lift that came back into service less than 30 minutes ago in `out`, with status `back` and the time it came back. The site says "sinds 21:43 weer in gebruik, maar was net nog buiten gebruik", counts it apart from real outages ("1 net weer in gebruik"), and the list says "lift net weer in gebruik" instead of "Liftstoring".
 
@@ -264,6 +278,7 @@ It's not a change, needs no buffer, and has no step-free requirement.
 **Why:** At first I also searched 90 min past 12:00 so late slow journeys would be compared fairly. But then a faster 12:05 journey hid every in-window journey, and some destinations looked unreachable. Validation caught this.
 
 ### 2026-09-29 — Representative days: the fullest Tue/Wed/Thu and Saturday in the next 4 weeks
+*Replaced on 2026-10-07: the most stations served, then the most stops, within eight weeks.*
 **What:** Count rail trips per date in the feed. Pick the Tue/Wed/Thu with the most (Wed 21 Oct in the first build) and likewise for Saturday (24 Oct). Ties go to the earliest.
 **Why:** Engineering works show up as missing trains, so the fullest day is the most normal one. Mondays and Fridays are skipped because they sometimes differ.
 

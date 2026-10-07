@@ -61,6 +61,9 @@ def test_houten_castellum_to_utrecht_runs_every_15_minutes():
 def test_stroller_never_ends_at_a_station_without_step_free_access(dest):
     for tset in ("all", "sprinter"):
         assert result("UT", dest, tset=tset) == [None] * 3
+    stations = json.loads((BUILD / "stations.json").read_text(encoding="utf-8"))
+    if dest not in {s["code"] for s in stations}:  # works can close a station for longer than the build looks ahead
+        pytest.skip(f"{dest} has no trains on the build's days")
     assert result("UT", dest, prof="any", tset="all") != [None] * 3  # but they are reachable without a pram
 
 
@@ -72,7 +75,7 @@ def test_router_avoids_a_real_transfer_station_marked_not_step_free():
     iff = gtfs.iff_stations()
     nl = set(iff.filter(pl.col("country") == "NL")["code"])
     minutes = dict(zip(iff["code"], iff["transfer_min"]))
-    tt = gtfs.day_timetable(gtfs.choose_days(trips, dates, date.today())["weekday"], trips, dates, nl)
+    tt = gtfs.day_timetable(gtfs.choose_days(gtfs.station_calls(trips, nl), trips, dates, date.today())["weekday"], trips, dates, nl)
     stations = access.load()
     net = network.build(tt, "all")
     o, d, ut = net.station_index["HTNC"], net.station_index["AMF"], net.station_index["UT"]

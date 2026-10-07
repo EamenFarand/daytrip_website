@@ -84,22 +84,58 @@ def service_dates() -> pl.DataFrame:
     )
 
 
-def choose_days(trips: pl.DataFrame, dates: pl.DataFrame, today: date, horizon_days: int = 28) -> dict[str, date]:
-    """Pick the Tue/Wed/Thu and the Saturday with the most rail trips in the next four weeks.
+def _station_of(nl_codes: set[str]) -> pl.DataFrame:
+    """stop_id -> Dutch station code, for the platform stops (zone "IFF:<code>")."""
+    return (
+        _read("stops.txt").select("stop_id", "zone_id").collect()
+        .filter(pl.col("zone_id").str.starts_with("IFF:"))
+        .select("stop_id", pl.col("zone_id").str.strip_prefix("IFF:").str.to_uppercase().alias("station"))
+        .filter(pl.col("station").is_in(list(nl_codes)))
+    )
 
-    Engineering works show up as missing trains, so the fullest day is the most normal one.
+
+def station_calls(trips: pl.DataFrame, nl_codes: set[str]) -> pl.DataFrame:
+    """Which Dutch stations each rail trip stops at: trip_id, station (stops where you can get on or off)."""
+    return (
+        _read("stop_times.txt")
+        .filter(pl.col("trip_id").is_in(trips["trip_id"].implode())
+                & ((pl.col("pickup_type").fill_null("0") != "1") | (pl.col("drop_off_type").fill_null("0") != "1")))
+        .select("trip_id", "stop_id")
+        .collect(engine="streaming")
+        .join(_station_of(nl_codes), on="stop_id")
+        .select("trip_id", "station")
+        .unique()
+    )
+
+
+def choose_days(calls: pl.DataFrame, trips: pl.DataFrame, dates: pl.DataFrame, today: date,
+                horizon_days: int = 56) -> dict[str, date]:
+    """Pick the Tue/Wed/Thu and the Saturday with the most normal service in the next eight weeks.
+
+    Engineering works close stations, so first: the most regular stations served. A regular station
+    has trains on at least half the days; only those count, which leaves out event-only stops like
+    Rotterdam Stadion. Then: the most calls at them. Not the most trips: works split through trains
+    into two trips, so on 27-29 Oct 2026 the days with the most trips were the ones with Wolfheze closed.
+    Eight weeks, because weekend works are common: no Saturday in the four weeks after 7 Oct 2026 was clean.
     Ties go to the earliest date.
     """
-    counts = (
-        trips.join(dates, on="service_id")
-        .filter(pl.col("date").is_between(today + timedelta(days=1), today + timedelta(days=horizon_days)))
+    per_day = (
+        calls.join(trips.select("trip_id", "service_id"), on="trip_id")
+        .join(dates.filter(pl.col("date").is_between(today + timedelta(days=1), today + timedelta(days=horizon_days))),
+              on="service_id")
+        .select("date", "station")
+    )
+    days_served = per_day.unique().group_by("station").len()
+    regular = days_served.filter(pl.col("len") * 2 >= per_day["date"].n_unique())["station"]
+    score = (
+        per_day.filter(pl.col("station").is_in(regular.implode()))
         .group_by("date")
-        .len()
+        .agg(pl.col("station").n_unique().alias("stations"), pl.len().alias("calls"))
         .with_columns(pl.col("date").dt.weekday().alias("dow"))  # 1 = Monday
     )
     out = {}
     for name, dows in (("weekday", [2, 3, 4]), ("saturday", [6])):
-        c = counts.filter(pl.col("dow").is_in(dows)).sort(["len", "date"], descending=[True, False])
+        c = score.filter(pl.col("dow").is_in(dows)).sort(["stations", "calls", "date"], descending=[True, True, False])
         if c.is_empty():
             raise RuntimeError(f"no {name} in the feed within {horizon_days} days of {today}")
         out[name] = c["date"][0]

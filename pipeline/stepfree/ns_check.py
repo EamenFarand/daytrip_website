@@ -50,7 +50,7 @@ def compare() -> list[str]:
     iff = gtfs.iff_stations()
     nl = set(iff.filter(pl.col("country") == "NL")["code"])
     minutes = dict(zip(iff["code"], iff["transfer_min"]))
-    day = gtfs.choose_days(trips, dates, date.today())["weekday"]
+    day = gtfs.choose_days(gtfs.station_calls(trips, nl), trips, dates, date.today())["weekday"]
     net = network.build(gtfs.day_timetable(day, trips, dates, nl), "all")
     prof = network.profile(net, "any", access.load(), minutes)
 

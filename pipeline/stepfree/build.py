@@ -70,10 +70,10 @@ def main(argv: list[str] | None = None) -> None:
     gtfs.ensure_feed()
     info = gtfs.feed_info()
     trips, dates = gtfs.rail_trips(), gtfs.service_dates()
-    days = gtfs.choose_days(trips, dates, today)
     iff = gtfs.iff_stations()
     nl_codes = set(iff.filter(pl.col("country") == "NL")["code"])
     transfer_minutes = dict(zip(iff["code"], iff["transfer_min"]))
+    days = gtfs.choose_days(gtfs.station_calls(trips, nl_codes), trips, dates, today)
     stations = access.load()
     timetables = {d: gtfs.day_timetable(days[d], trips, dates, nl_codes) for d in DAY_TYPES}
     print(f"days: {days}; EPIAP {next(iter(stations.values())).source_date}; loading took {time.time() - started:.0f}s")
