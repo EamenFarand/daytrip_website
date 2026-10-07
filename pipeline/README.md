@@ -6,7 +6,7 @@ Builds everything the site loads. No AI at runtime, just this code.
 cd pipeline
 uv sync
 uv run python -m stepfree.build          # ~2.5 min on 4 cores; downloads are cached
-uv run pytest                            # 72 tests; the NS comparison skips until NS_API_KEY is set
+uv run pytest                            # 73 tests; the NS comparison skips until NS_API_KEY is set
 uv run python -m stepfree.ns_check       # our journeys vs the NS journey planner (needs NS_API_KEY)
 ```
 

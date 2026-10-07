@@ -48,6 +48,15 @@ def test_loads_a_local_file_and_ignores_an_old_record(tmp_path, monkeypatch):
     assert trains.load(datetime(2026, 10, 30, tzinfo=timezone.utc)) is None  # more than two weeks old
 
 
+def test_says_nothing_on_stdout(tmp_path, monkeypatch, capsys):
+    """stepfree.inputs' stdout goes to GitHub Actions as key=value lines; a message there stopped the deploy of 7 Oct."""
+    f = tmp_path / "trains.json"
+    f.write_text(json.dumps(record({}, updated="2026-01-01T00:00:00Z")))
+    monkeypatch.setenv("STEPFREE_TRAINS", str(f))
+    assert trains.load() is None
+    assert capsys.readouterr().out == ""
+
+
 def test_the_digest_changes_with_a_verdict_not_with_every_new_day():
     r = record({"2026-10-05": ("1100", ""), "2026-10-06": ("1100", ""), "2026-10-07": ("1100", "")})
     today = date(2026, 10, 8)

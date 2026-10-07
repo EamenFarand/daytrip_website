@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 
@@ -44,15 +45,20 @@ def load(now: datetime | None = None) -> dict | None:
             path = fetch(TRAINS_URL, "trains.json", timeout=60)
         except requests.RequestException as e:
             path = CACHE / "trains.json"
-            print(f"trains: download failed ({e}); {'using the last copy' if path.exists() else 'none kept'}")
+            _say(f"trains: download failed ({e}); {'using the last copy' if path.exists() else 'none kept'}")
     if not path.exists():
         return None
     record = json.loads(path.read_text(encoding="utf-8"))
     updated = datetime.fromisoformat(record["updated"].replace("Z", "+00:00"))
     if record.get("v") != 1 or (now or datetime.now(timezone.utc)) - updated > MAX_AGE:
-        print(f"trains: the record of {record['updated']} is too old (or of an unknown kind); not used")
+        _say(f"trains: the record of {record['updated']} is too old (or of an unknown kind); not used")
         return None
     return record
+
+
+def _say(text: str) -> None:
+    """To stderr: stepfree.inputs' stdout goes to GitHub Actions as key=value lines."""
+    print(text, file=sys.stderr)
 
 
 def _kind(d: date) -> str | None:
