@@ -24,7 +24,7 @@ from datetime import date, datetime, timezone
 
 import polars as pl
 
-from . import access, config, gtfs, inputs, network
+from . import access, config, gtfs, inputs, network, trains
 from .config import BUILD, DAY_TYPES, PROFILES, TRAIN_SETS
 from .precompute import more_options_never_worse, origin_results
 from .validate import check_router, validate
@@ -46,8 +46,8 @@ def unique_slugs(names: dict[str, str]) -> dict[str, str]:
 
 def _run_combo(args) -> tuple[str, str, dict]:
     """One (day, train set): build the network once, then every origin for both profiles."""
-    day_type, train_set, tt, stations, transfer_minutes, only = args
-    net = network.build(tt, train_set)
+    day_type, train_set, tt, step_free, stations, transfer_minutes, only = args
+    net = network.build(tt, train_set, step_free)
     out: dict[str, dict] = {}
     for prof_name in PROFILES:
         prof = network.profile(net, prof_name, stations, transfer_minutes)
@@ -76,9 +76,12 @@ def main(argv: list[str] | None = None) -> None:
     days = gtfs.choose_days(gtfs.station_calls(trips, nl_codes), trips, dates, today)
     stations = access.load()
     timetables = {d: gtfs.day_timetable(days[d], trips, dates, nl_codes) for d in DAY_TYPES}
+    record = trains.load()
+    step_free = {d: trains.verdicts(record, days[d]) for d in DAY_TYPES}
     print(f"days: {days}; EPIAP {next(iter(stations.values())).source_date}; loading took {time.time() - started:.0f}s")
+    print(f"trains without steps from NS's marks: {({d: trains.summary(v) for d, v in step_free.items()}) if record else 'no record'}")
 
-    combos = [(d, s, timetables[d], stations, transfer_minutes, set(args.only or [])) for d in DAY_TYPES for s in TRAIN_SETS]
+    combos = [(d, s, timetables[d], step_free[d], stations, transfer_minutes, set(args.only or [])) for d in DAY_TYPES for s in TRAIN_SETS]
     results: dict[str, dict] = {}
     # "spawn", not Linux's default "fork": a forked child inherits polars' thread pool mid-use
     # and can deadlock (the first CI build hung). Windows always spawns.
@@ -138,11 +141,14 @@ def main(argv: list[str] | None = None) -> None:
         "max_changes": config.MAX_TRANSFERS,
         "stroller_buffer_min": config.STROLLER_BUFFER,
         "train_sets": {"all": f"all trains except {sorted(config.EXCLUDED_CATEGORIES)}",
-                       "sprinter": "NS Sprinters and all regional/cross-border stopping trains; no NS Intercity or international"},
+                       "sprinter": "trains without steps: those NS marked accessible on every recent day (an intercity "
+                                   "on at least 3); without a mark NS Sprinters and regional/cross-border stopping trains"},
+        "trains": {"record": record["updated"] if record else None, **{d: trains.summary(v) for d, v in step_free.items()}},
         "gtfs": {"version": info["feed_version"], "valid": [info["feed_start_date"], info["feed_end_date"]]},
         "epiap_date": next(iter(stations.values())).source_date,
         "inputs": inputs.fingerprint(),  # lets the nightly job skip a build when nothing changed
-        "entry_format": "[median_min, fastest_min, departures_per_hour, changes, 'VIA|VIA'?] per change limit 0,1,2; "
+        "entry_format": "[median_min, fastest_min, departures_per_hour, changes, 'VIA|VIA', 'TRACKS', 1?] per change "
+                        "limit 0,1,2; the final 1 when the typical journey takes an intercity counted as without steps; "
                         "missing trailing entries = same as the last one; null = no journey; each entry is the best "
                         "(shortest median) of its own and those with fewer options (changes, intercities, no pram)",
         "sources": [
@@ -150,6 +156,8 @@ def main(argv: list[str] | None = None) -> None:
             {"name": "Toegankelijkheid stations (NeTEx EPIAP)", "by": "DOVA / ProRail via NDOV Loket", "licence": "CC0",
              "url": "https://data.ndovloket.nl/netex/epiap/"},
             {"name": "Overstaptijden (IFF)", "by": "NS via NDOV Loket", "licence": "CC0", "url": "https://data.ndovloket.nl/ns/"},
+            {"name": "Treinen zonder trapjes (InfoPlus RIT)", "by": "NS via NDOV Loket", "licence": "CC0",
+             "url": "https://govi.nu/realtime.html"},
         ],
         "counts": {"stations": len(station_rows), "origins": len(served)},
     }

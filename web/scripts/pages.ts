@@ -35,7 +35,7 @@ export interface Reach {
   entry: Entry;
 }
 
-/** The site's default view: weekday, sprinters and stopping trains, at most 1 change; quickest first. */
+/** The site's default view: weekday, trains without steps, at most 1 change; quickest first. */
 export function reachable(doc: OriginDoc | null, byCode: Map<string, Station>, profile: "stroller" | "any", maxMinutes: number): Reach[] {
   const dests = doc?.results.weekday?.[profile]?.sprinter ?? {};
   const out: Reach[] = [];
@@ -105,8 +105,8 @@ export function stationText(st: Station, doc: OriginDoc | null, byCode: Map<stri
   const n30 = within30.length;
   const n60 = within60.length;
   const how = pram
-    ? tr({ nl: "Met de kinderwagen, sprinters en stoptreinen en hoogstens één overstap", en: "With a pram, using sprinters and stopping trains with at most one change" })
-    : tr({ nl: "Zonder kinderwagen, met sprinters en stoptreinen en hoogstens één overstap", en: "Without a pram, using sprinters and stopping trains with at most one change" });
+    ? tr({ nl: "Met de kinderwagen, treinen zonder trapjes en hoogstens één overstap", en: "With a pram, using trains without steps and at most one change" })
+    : tr({ nl: "Zonder kinderwagen, met treinen zonder trapjes en hoogstens één overstap", en: "Without a pram, using trains without steps and at most one change" });
   let reach = n30
     ? tr({
         nl: `${how} bereik je doordeweeks ${n30 === 1 ? "één station" : `${n30} stations`} binnen 30 minuten, zoals ${listText(quick)}.`,
@@ -127,8 +127,8 @@ export function stationText(st: Station, doc: OriginDoc | null, byCode: Map<stri
   parts.push(`<p>${reach}</p>`);
   parts.push(
     `<p>${tr({
-      nl: "Hieronder staan alle bestemmingen op de kaart en in de lijst. Je kunt ook kiezen voor intercity's, meer overstappen of zaterdag.",
-      en: "Below, you'll find every destination on the map and in the list. You can also choose intercity trains, more changes or Saturday.",
+      nl: "Hieronder staan alle bestemmingen op de kaart en in de lijst. Je kunt ook kiezen voor alle treinen, meer overstappen of zaterdag.",
+      en: "Below, you'll find every destination on the map and in the list. You can also choose all trains, more changes or Saturday.",
     })}</p>`,
   );
 

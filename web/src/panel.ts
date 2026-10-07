@@ -15,6 +15,7 @@ export interface PanelContext {
   lifts: LiftStatus | null;
   fresh: Freshness;
   stroller: boolean;
+  withoutSteps: boolean; // the "trains without steps" set is chosen
   onStartHere: (code: string) => void;
 }
 
@@ -99,6 +100,13 @@ function journeyBlock(v: Verdict, ctx: PanelContext): HTMLElement | null {
     }
     add(tr({ nl: "Hoe vaak", en: "How often" }), frequency(perHour, (end - start) / 60, window));
     box.append(dl);
+    if (ctx.withoutSteps && v.entry[6] === 1) {
+      const note = tr({
+        nl: "Met een intercity zonder trapjes (meestal de nieuwe ICNG). Soms zet NS een andere trein in, met trapjes: kijk vlak voor vertrek in de NS-reisplanner.",
+        en: "With an intercity without steps (usually the new ICNG). NS sometimes runs a different train, with steps: check the NS Journey Planner just before you go.",
+      });
+      box.append(el("p", note, "small"));
+    }
     if (warnings.length) box.append(warningBox(warnings));
     const basis = tr({
       nl: `Gebaseerd op de dienstregeling van ${longDate(ctx.dayIso)}, vertrek tussen ${window}.`,
@@ -115,8 +123,8 @@ function journeyBlock(v: Verdict, ctx: PanelContext): HTMLElement | null {
               en: "We don't know whether this station is step-free. As long as that's unknown, we don't count it.",
             })
           : tr({
-              nl: "Niet bereikbaar binnen je keuzes. Probeer meer overstappen, een langere reistijd, of ook intercity's.",
-              en: "Not reachable within your choices. Try more changes, a longer travel time, or intercity trains too.",
+              nl: "Niet bereikbaar binnen je keuzes. Probeer meer overstappen, een langere reistijd of alle treinen.",
+              en: "Not reachable within your choices. Try more changes, a longer travel time or all trains.",
             });
     box.append(el("p", why));
   }

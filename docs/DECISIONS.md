@@ -4,6 +4,30 @@ One entry per non-obvious decision: what, why, and what was rejected. Newest on 
 
 ---
 
+### 2026-10-07 — Trains without steps: NS's own mark per train comes first
+**What:** Daan's go. The "sprinter" train set is now called "Zonder trapjes" ("Without steps"); the other option is "Alle treinen" ("All trains"). It follows NS's own mark in its journey messages (InfoPlus RIT via NDOV Loket, CC0): for every train unit, accessible or not (`MaterieelDeelToegankelijk`, J/N).
+- **Recording:** the lift listener on Daan's server also follows these messages. Per service date it records which train numbers ran with accessible units only, and which with one that isn't. The build reads that through `/api/trains`.
+- **The rule**, per train number and day type, over the last four weeks of the same yearly timetable:
+  - seen once with a unit that isn't accessible: out, whatever its category;
+  - seen at least 3 times, always accessible: in, intercities too;
+  - otherwise the rule of 2026-09-29 decides.
+- **Without a record** younger than two weeks, the build works as before.
+- **On the site:** a journey that relies on such an intercity says so, with a note that NS sometimes runs another train.
+
+**Why:**
+- Daan rode an ICNG from Groningen to Schiphol: no steps.
+- But the train type varies per train, even on one route. On IC 700 one train was an ICNG and the next an ICM. And NS marks the ICNG built for Brussels ("8B") not accessible, also when it runs a domestic intercity.
+- NS's mark is per unit and per day, so it captures both. Requiring every recent day keeps a wrong "yes" unlikely.
+- It also corrects the old rule. NS marks some regional trains not accessible that we counted:
+  - Arriva LINT on Zutphen–Oldenzaal and Almelo–Hardenberg;
+  - a GTW on Emmen–Zwolle;
+  - NMBS Roosendaal–Antwerpen.
+
+**Rejected:**
+- *A list of routes or series where the ICNG runs (Daan's first idea).* The type varies per train within a series, and a list goes stale as NS adds ICNGs.
+- *The NS API's planned stock.* It needs the key (still pending) and a call per train.
+- *Counting a train after a share of accessible days (say 90%).* That gives a wrong "yes" on the other days.
+
 ### 2026-10-07 — Reference days stay in the timetable that's running
 **What:** The build picks reference days from before the next yearly timetable change, as long as this year's timetable still has a Tue/Wed/Thu (or a Saturday) left. Only then does it take days from the new one. The change is on the Sunday after the second Saturday of December (the European rule), so 13 Dec 2026.
 
@@ -267,6 +291,8 @@ A short list adds names that share no words with the official one (Den Bosch, Bi
 **Why:** The name is Daan's call and goes with the domain (Phase 3). It must not refer to NS or ProRail (principle 5).
 
 ### 2026-09-29 — "Sprinter" train set = NS Sprinters + all regional stopping trains (Daan: option A)
+*Changed on 2026-10-07: NS's own mark per train comes first; this rule now decides only for trains without one.*
+
 **What:** The sprinter set is:
 - NS: only trips labelled *Sprinter*;
 - every trip run by regional or cross-border operators (Arriva, Blauwnet, RRReis, Qbuzz and R-net, Keolis; DB, Eurobahn, VIAS, NMBS stopping trains), whatever their label.

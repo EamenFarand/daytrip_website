@@ -42,13 +42,15 @@ export interface Meta {
   sources: { name: string; by: string; url: string; licence?: string }[];
 }
 
-/** [median, fastest, departures per hour, changes, "VIA|VIA" ("" if direct), "TRACKS"]
+/** [median, fastest, departures per hour, changes, "VIA|VIA" ("" if direct), "TRACKS", 1?]
  * TRACKS: departure, then arrival and departure at each change, then arrival; "?" = unknown.
- * Older builds (and hand-made tests) may stop after changes or via. */
+ * The final 1: the journey takes an intercity that counts as without steps because NS marks it accessible
+ * (usually the ICNG; DECISIONS 2026-10-07). Older builds (and hand-made tests) may stop after changes or via. */
 export type Entry =
   | [number, number, number, number]
   | [number, number, number, number, string]
-  | [number, number, number, number, string, string];
+  | [number, number, number, number, string, string]
+  | [number, number, number, number, string, string, 1];
 
 export type Results = Record<Day, Record<Profile, Record<TrainSet, Record<string, (Entry | null)[]>>>>;
 

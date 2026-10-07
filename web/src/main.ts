@@ -98,7 +98,7 @@ async function start(): Promise<void> {
     const n = state.maxChanges;
     $("filters-summary").textContent = [
       state.profile === "stroller" ? tr({ nl: "kinderwagen", en: "pram" }) : tr({ nl: "zonder beperking", en: "without a pram" }),
-      state.trains === "sprinter" ? "sprinters" : tr({ nl: "ook intercity's", en: "intercity too" }),
+      state.trains === "sprinter" ? tr({ nl: "zonder trapjes", en: "without steps" }) : tr({ nl: "alle treinen", en: "all trains" }),
       state.day === "weekday" ? tr({ nl: "doordeweeks", en: "weekday" }) : tr({ nl: "zaterdag", en: "Saturday" }),
       n === 0 ? tr({ nl: "geen overstap", en: "no changes" }) : tr({ nl: `max. ${n} overstap${n > 1 ? "pen" : ""}`, en: `max. ${n} change${n > 1 ? "s" : ""}` }),
       state.maxMinutes >= MAX_MINUTES ? tr({ nl: "elke reistijd", en: "any travel time" }) : `max. ${duration(state.maxMinutes)}`,
@@ -235,6 +235,7 @@ async function start(): Promise<void> {
         lifts,
         fresh: freshness(lifts, new Date()),
         stroller,
+        withoutSteps: state.trains === "sprinter",
         onStartHere: (code) => {
           stationDialog.close();
           setState({ origin: code, selected: null });
@@ -272,11 +273,11 @@ async function start(): Promise<void> {
       nl:
         `Vanaf ${name}: ${count} station${s} bereikbaar${limit ? ` binnen ${limit}` : ""}, ` +
         `${n === 0 ? "zonder overstap" : `met hoogstens ${n} overstap${n > 1 ? "pen" : ""}`} ` +
-        `(${sprinters ? "sprinters en stoptreinen" : "alle treinen"}, ${weekday ? "doordeweeks" : "op zaterdag"}).`,
+        `(${sprinters ? "treinen zonder trapjes" : "alle treinen"}, ${weekday ? "doordeweeks" : "op zaterdag"}).`,
       en:
         `From ${name}: ${count} station${s} you can reach${limit ? ` within ${limit}` : ""}, ` +
         `${n === 0 ? "without changing" : `with at most ${n} change${n > 1 ? "s" : ""}`} ` +
-        `(${sprinters ? "sprinters and stopping trains" : "all trains"}, ${weekday ? "on a weekday" : "on Saturday"}).`,
+        `(${sprinters ? "trains without steps" : "all trains"}, ${weekday ? "on a weekday" : "on Saturday"}).`,
     });
   }
 

@@ -6,42 +6,28 @@ Everything that needs you, batched. Open items first; answered items are kept at
 
 ## Open
 
-The site is live at **<https://trapvrij.nl>**, with DNSSEC and the live lift status. Nothing from you is open for v1. Item 1 is a decision on a new feature; the rest are optional or waiting on others.
+The site is live at **<https://trapvrij.nl>**, with DNSSEC and the live lift status. Nothing from you is open for v1. Item 1 is a short server update for a new feature; the rest are optional or waiting on others.
 
-### 1. Decide: trains without steps from NS's own data (ICNG intercities)
+### 1. Update the listener on your server (trains without steps)
 
-You asked on 7 Oct whether intercities that run as ICNG (no steps) can count as trains without steps.
-- **The timetables don't say which train type runs a trip** (neither the GTFS feed nor NS's IFF).
-- **The type varies per train, even on one route.** On IC 700 (Schiphol–Groningen), one train was an ICNG and the next an ICM, which has steps.
+You said go on 7 Oct; the site and the build are ready. The listener needs the new code to start recording NS's marks. These are the same steps as last time, on the server:
 
-**NS's own journey messages do say it.** They come as InfoPlus via NDOV Loket: open data (CC0), from the same provider as the lift status. They give every train unit NS's flag "toegankelijk" (J/N). In a 3-minute sample on 7 Oct:
-- **J (accessible):**
-  - all Sprinters (SLT, SNG, Flirt) and most regional trains;
-  - the ICNG on IC 500, IC 1100 and Intercity direct.
-- **N (not accessible):**
-  - VIRM, ICM and DDZ;
-  - the ICNG that runs to Brussels;
-  - some regional trains the site now counts as step-free: Arriva Zutphen–Oldenzaal and Almelo–Hardenberg (LINT), one Emmen–Zwolle train, and NMBS Roosendaal–Antwerpen.
+```bash
+cd ~/trapvrij/lifts
+git pull && docker compose up -d --build
+docker compose logs --tail 20
+```
 
-**Proposal:**
-1. **The listener records it.** The lift listener also follows these messages: one extra connection, which is within fair use. It keeps four weeks of which train number ran with all units accessible, per day.
-2. **The build only trusts what's consistent.**
-   - A train counts as "without steps" only when NS marked all its units accessible on every day it was seen.
-   - An intercity needs at least 3 such days of the same day type (weekday or Saturday).
-   - A train seen even once with a unit marked N doesn't count.
-   - Without the data, the build works as today.
-3. **The site says so.**
-   - The option becomes "Treinen zonder trapjes": sprinters, stopping trains and intercities that run as ICNG.
-   - A journey that uses such an intercity says so, with a note that NS sometimes runs another train.
-4. **You update the listener on the server**, with the same steps as last time.
-   - After 1–2 weeks of data, the ICNG trains appear.
-   - More appear automatically as NS adds ICNGs.
+In the log you should now see **two** `connected to` lines, one ending in `:7666` (lifts) and one in `:7664` (trains). Within a minute you should also see `trains published: ...`. The lift lines stay as they were. The key and the store are the same; nothing to change in `.env`.
 
-**Your call:** go or not.
+**What happens next:**
+- Within a day, trains NS marks not accessible drop out of "Zonder trapjes" (e.g. the LINT trains Zutphen–Oldenzaal).
+- **After 3 weekdays**, the first ICNG intercities count on weekdays. **Saturdays take 3 Saturdays.**
+- Only trains that NS marked accessible every time count. A train that sometimes runs with an older train or the ICNG built for Brussels stays out.
 
 ### 2. Optional: send NDOV Loket two questions
 
-Even an always-on listener can't fix a silent feed. On 2 October no lift changes arrived from 00:55 until at least 20:28, while the feed's heartbeats and the 04:02 full state kept coming. If you want, send this (contact details on <https://ndovloket.nl>):
+Even an always-on listener can't fix a silent feed. On 2 October no lift changes arrived from 00:55 until at least 20:28, while the feed's heartbeats and the 04:02 full state kept coming. If you want, send this (contact details on <https://govi.nu>, which now runs NDOV Loket; ndovloket.nl redirects there):
 
 > **Onderwerp:** SIRI-FM liftstatus: stilte op 2 oktober, en de actuele stand ophalen
 >
@@ -92,6 +78,7 @@ Reporting them helps everyone who uses this data (the NS app, 9292…). If you w
 
 ## Answered
 
+- **2026-10-07, trains without steps from NS's own data (ICNG intercities):** go. Built the same day: the listener records NS's accessible mark per train, and the build counts a train as without steps from four weeks of it (DECISIONS 2026-10-07). Waiting for the listener update (item 1).
 - **2026-09-29, Phase 0 go/no-go:** Go.
 - **2026-09-29, what counts as a sprinter:** option A, NS Sprinters plus every regional train. Reason: *any train taken must avoid steps inside the train*; IC trains have steps. Logged in DECISIONS.md.
 - **2026-09-29, Houten and Houten Castellum in person:** both *accessible pain-free with a pram*. Recorded in `pipeline/overrides/stations.csv` as verified.

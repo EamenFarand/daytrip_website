@@ -20,7 +20,7 @@ Daan owns this project. He does only what an AI can't: create accounts, supply A
 - Data pipeline: Python 3.12, `uv`, pandas or polars, pytest
 - Frontend: static site — Vite + TypeScript + MapLibre GL JS
 - Hosting: Cloudflare Pages. Scheduled jobs: GitHub Actions
-- Live lift status: a Docker listener on Daan's always-on Linux home server writes to Cloudflare Workers KV, and a tiny read-only Pages Function serves it (see DECISIONS.md, 2026-10-02)
+- Live lift status: a Docker listener on Daan's always-on Linux home server writes to Cloudflare Workers KV, and a tiny read-only Pages Function serves it (see DECISIONS.md, 2026-10-02). The same listener records which trains NS marks accessible, for the build (DECISIONS.md, 2026-10-07)
 - Secrets: `.env` locally (git-ignored), GitHub Actions secrets in CI, an env file on the home server. Never commit keys.
 
 ## Layout

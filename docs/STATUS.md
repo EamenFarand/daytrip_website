@@ -8,9 +8,10 @@ Built and running:
 - CI on every push;
 - the twice-daily build and deploy;
 - station pages;
-- the lift listener on Daan's server (publishing since 4 Oct, 04:02) and the site's lift warnings.
+- the lift listener on Daan's server (publishing since 4 Oct, 04:02) and the site's lift warnings;
+- the English version under `/en/` (7 Oct).
 
-Nothing from Daan blocks v1. The listener runs the new code since 4 Oct (20:10 UTC), and the first lift that came back showed correctly on the live site.
+Nothing from Daan blocks v1. The listener runs the code of 4 Oct (20:10 UTC). For trains without steps it needs the update of 7 Oct (NEEDS_DAAN 1).
 Search Console: domain verified and sitemap submitted on 3 Oct.
 
 
@@ -40,6 +41,16 @@ Search Console: domain verified and sitemap submitted on 3 Oct.
   - The about box explains the lift status (what it shows, the source, about ten minutes' delay, that it can be out of date), and the sources credit it.
   - A lift that has just come back keeps a softer warning for 30 minutes (Daan's choice A, DECISIONS 2026-10-04): the listener lists it as `back`, and the site says "net weer in gebruik". Site and listener have it since 4 Oct; checked live with UT-LIF-009 (Utrecht Centraal).
 - Also: the softer dark mode, the name Trapvrij, and a report link per station. Reports go to `meld@trapvrij.nl` (Cloudflare Email Routing) since 3 Oct.
+- **Trains without steps from NS's own data** (7 Oct, Daan's go, DECISIONS 2026-10-07):
+  - NS's journey messages (InfoPlus RIT, `/RIG/InfoPlusRITInterface5` on `pubsub.besteffort.ndovloket.nl:7664`, CC0) mark every train unit accessible or not (`MaterieelDeelToegankelijk`).
+  - The listener (`lifts/`) records per date which train numbers ran with accessible units only, and publishes that hourly to KV (`trains`); `functions/api/trains.js` serves it.
+  - The build (`pipeline/stepfree/trains.py`) uses four weeks of the same yearly timetable:
+    - seen once not accessible: out;
+    - at least 3 times, always accessible: in, intercities too;
+    - otherwise the category rule. Without a record younger than two weeks it builds as before.
+  - Entries get a final `1` when the typical journey uses such an intercity. The panel then notes that NS sometimes runs another train. The option is now "Zonder trapjes" / "Alle treinen".
+  - Checked locally with a sample record: Den Haag C → Eindhoven with a pram became direct (88 min, 2× an hour), validation passed, and the panel note shows in both languages.
+  - **Live once Daan has updated the listener** (NEEDS_DAAN 1). After that: about 3 weekdays (Saturdays: 3 Saturdays) before the first ICNG intercities count. Until then the endpoint is a 404 and the build uses the old rule.
 - **English version** (7 Oct, Daan's request, DECISIONS 2026-10-07):
   - every page also exists under `/en/` (home, 395 station pages, `/en/station/`, `/en/404.html`);
   - a "NL | EN" switch in the header leads to the same page and view;
@@ -64,10 +75,6 @@ Search Console: domain verified and sitemap submitted on 3 Oct.
    - Scheduled workflows in a public repo pause after 60 days without repo activity. We decided against a keep-alive (DECISIONS 2026-10-07); the one-click fix is in NEEDS_DAAN.
    - `ubuntu-latest` moves to Ubuntu 26 from 19 Oct; we pin `ubuntu-24.04`.
 8. Then stop and summarise Phase 3 for Daan.
-
-**Waiting for Daan (not part of v1):** trains without steps from NS's own data, which would bring in the ICNG intercities (NEEDS_DAAN 1).
-- NS's InfoPlus journey messages (`/RIG/InfoPlusRITInterface5` on `pubsub.besteffort.ndovloket.nl:7664`, CC0) give every train unit a type and NS's flag `MaterieelDeelToegankelijk` (J/N).
-- A 3-minute sample on 7 Oct also flagged some regional trains the site now counts as step-free as "N" (Arriva LINT, NMBS Roosendaal–Antwerpen).
 
 ## Done before
 - **Phase 0**: data audit, verdict Go. See `audit/REPORT.md`, including Q5 on the 72-hour lift log.

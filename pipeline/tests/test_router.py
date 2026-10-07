@@ -28,9 +28,9 @@ MINUTES = {"O": 2, "X": 2, "Y": 2, "D": 2}
 
 
 def search(trips, profile, access=ACCESS, transfers=(), origin="O", start="09:00", end="12:00", train_set="all",
-           categories=None, minutes=MINUTES):
+           categories=None, minutes=MINUTES, step_free=None):
     tt = timetable(trips, transfers, categories)
-    net = network.build(tt, train_set)
+    net = network.build(tt, train_set, step_free)
     prof = network.profile(net, profile, access, minutes)
     found = raptor.profile_search(net, prof, net.station_index[origin], hm(start), hm(end))
     return net, {net.station_codes[s]: v for s, v in found.items()}
@@ -138,6 +138,22 @@ def test_sprinter_set_skips_intercity():
     _, found = search(trips, "any", categories=categories, train_set="sprinter")
     assert arrival(found, max_trains=1) is None
     assert arrival(found, max_trains=2) == hm("10:30")
+
+
+def test_ns_marks_decide_before_the_category():
+    trips = FAST | {"IC": [("O", "1", "10:05", "10:05"), ("D", "1", "10:20", "10:20")]}
+    categories = {"IC": ("NS", "Intercity"), "T1": ("Arriva", "Stoptrein")}
+    # an intercity NS marks accessible joins the trains without steps, and the journey says it takes one
+    net, found = search(trips, "any", categories=categories, train_set="sprinter", step_free={"IC": True})
+    assert arrival(found, max_trains=1) == hm("10:20")
+    assert summarise(net, found["D"][0]).encode()[6:] == [1]
+    assert summarise(net, found["D"][1]).intercity  # also the typical journey when a change is allowed
+    # a regional train NS marks not accessible drops out (via Y at 10:50, not via X at 10:30); the unmarked intercity stays out
+    _, found = search(trips | SLOW, "any", categories=categories, train_set="sprinter", step_free={"T1": False})
+    assert arrival(found, max_trains=1) is None and arrival(found, max_trains=2) == hm("10:50")
+    # with all trains, the marks don't matter
+    _, found = search(trips, "any", categories=categories, step_free={"T1": False, "IC": False})
+    assert arrival(found, max_trains=1) == hm("10:20")
 
 
 def test_first_train_must_leave_within_the_window():

@@ -53,8 +53,9 @@ MIN_SAME_PLATFORM = 2  # re-boarding on the same platform or across an island pl
 EXCLUDED_AGENCIES = {"Miljoenenlijn"}
 EXCLUDED_CATEGORIES = {"Drempelvrije bus", "Eurostar", "European Sleeper", "GoVolta", "Nightjet"}
 
-# "Sprinter" train set (Daan, 2026-09-29, option A): trains without steps inside or at the door.
-# NS: only Sprinters. Regional and cross-border stopping-train operators: every train they run.
+# "Sprinter" train set: trains without steps inside or at the door (Daan, 2026-09-29, option A).
+# First NS's own mark per train, from recent weeks (trains.py, DECISIONS 2026-10-07); without one, the category:
+# NS only Sprinters, regional and cross-border stopping-train operators every train they run.
 SPRINTER_NS_CATEGORIES = {"Sprinter"}
 NS_AGENCIES = {"NS", "NS International"}
 
@@ -63,11 +64,19 @@ PROFILES = ("any", "stroller")
 DAY_TYPES = ("weekday", "saturday")
 
 
-def in_train_set(agency: str, category: str | None, train_set: str) -> bool:
+def in_train_set(agency: str, category: str | None, train_set: str, step_free: bool | None = None) -> bool:
+    """`step_free`: NS's verdict for this train (trains.verdicts), or None when there isn't one."""
     if agency in EXCLUDED_AGENCIES or category in EXCLUDED_CATEGORIES:
         return False
     if train_set == "all":
         return True
+    if step_free is not None:
+        return step_free
     if agency in NS_AGENCIES:
         return category in SPRINTER_NS_CATEGORIES
     return True  # Arriva, Keolis, Qbuzz, R-net NS, DB, Eurobahn, VIAS, NMBS stopping trains
+
+
+def by_category(agency: str, category: str | None) -> bool:
+    """Would the category alone put this train in the "sprinter" set? (An intercity NS marks accessible wouldn't.)"""
+    return in_train_set(agency, category, "sprinter")

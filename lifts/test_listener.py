@@ -1,11 +1,13 @@
-"""The lift listener's rules, on hand-made SIRI-FM messages shaped like the real feed."""
+"""The listener's rules, on hand-made SIRI-FM messages shaped like the real feed, and on real NS journey messages."""
 
 import gzip
-from datetime import datetime, timedelta, timezone
+from datetime import date, datetime, timedelta, timezone
+from pathlib import Path
 
-from listener import FULL_STATE_MIN, Publisher, State, parse, problem
+from listener import FULL_STATE_MIN, Publisher, State, Trains, parse, parse_rit, problem
 
 NOW = datetime(2026, 10, 2, 12, 0, tzinfo=timezone.utc)
+TESTDATA = Path(__file__).parent / "testdata"  # real InfoPlus RIT messages of 7 Oct 2026 (NDOV Loket, CC0)
 
 
 def condition(lift: str, status: str, start: str, end: str | None = None) -> str:
@@ -112,6 +114,56 @@ def test_publishes_on_change_but_not_too_often(tmp_path):
     assert p.due(s.payload(NOW + timedelta(minutes=2)), NOW + timedelta(minutes=2))
     p.publish(s.payload(NOW + timedelta(minutes=2)), NOW + timedelta(minutes=2))
     assert p.due(s.payload(NOW + timedelta(minutes=12)), NOW + timedelta(minutes=12))  # every 10 minutes regardless
+
+
+def rit(day: str, *parts: tuple[str, list[str | None]]) -> bytes:
+    """A journey message shaped like NS's: per part of the run, its train number and its units' accessible marks."""
+    def stop(i: int, mark: str | None) -> str:
+        unit = "<MaterieelDeelSoort>ICNG</MaterieelDeelSoort>" + (f"<MaterieelDeelToegankelijk>{mark}</MaterieelDeelToegankelijk>" if mark else "")
+        return f"<LogischeRitDeelStation><Station><StationCode>S{i}</StationCode></Station><MaterieelDeel>{unit}</MaterieelDeel></LogischeRitDeelStation>"
+    body = "".join(f"<LogischeRitDeel><LogischeRitDeelNummer>{n}</LogischeRitDeelNummer>{''.join(stop(i, m) for i, m in enumerate(marks))}</LogischeRitDeel>"
+                   for n, marks in parts)
+    xml = ('<ns2:PutReisInformatieBoodschapIn xmlns="urn:ns:cdm:reisinformatie:data:rit:5" xmlns:ns2="urn:ns:cdm:reisinformatie:message:ritinfo:5">'
+           f"<ReisInformatieProductRitInfo><RitInfo><TreinNummer>{parts[0][0]}</TreinNummer><TreinDatum>{day}</TreinDatum>"
+           f"<LogischeRit>{body}</LogischeRit></RitInfo></ReisInformatieProductRitInfo></ns2:PutReisInformatieBoodschapIn>")
+    return gzip.compress(xml.encode())
+
+
+def test_reads_ns_accessible_mark_per_part_of_a_train():
+    assert parse_rit(rit("2026-10-07", ("1100", ["J", "J"]))) == [("2026-10-07", "1100", "J")]
+    # one unit marked not accessible anywhere on the run is enough; a run continuing under another number has two parts
+    assert parse_rit(rit("2026-10-07", ("1778", ["J", "N"]), ("2878", ["J"]))) == [("2026-10-07", "1778", "N"), ("2026-10-07", "2878", "J")]
+    assert parse_rit(rit("2026-10-07", ("700", []))) == []  # no units listed: nothing
+    assert parse_rit(rit("2026-10-07", ("701", ["J", None]))) == []  # a unit without the mark: nothing
+
+
+def test_reads_real_journey_messages():
+    read = lambda name: parse_rit((TESTDATA / name).read_bytes())
+    assert read("rit-icd-1885-icng5.xml.gz") == [("2026-10-07", "1885", "J")]  # a five-car ICNG
+    assert read("rit-icd-1887-icng8b.xml.gz") == [("2026-10-07", "1887", "N")]  # the ICNG built for Brussels: NS says not accessible
+    assert read("rit-ic-1778-2878-ddz.xml.gz") == [("2026-10-07", "1778", "N"), ("2026-10-07", "2878", "N")]  # double-deckers, two parts
+
+
+def test_a_train_seen_with_steps_once_stays_so_that_day(tmp_path):
+    t = Trains()
+    t.add([("2026-10-07", "700", "J"), ("2026-10-07", "700", "N"), ("2026-10-07", "700", "J"), ("2026-10-08", "700", "J")])
+    assert t.days == {"2026-10-07": {"700": "N"}, "2026-10-08": {"700": "J"}}
+    t.add([("2026-10-08", "11000", "J"), ("2026-10-08", "1100", "J"), ("2026-10-08", "702", "N")])
+    assert t.payload(NOW)["days"]["2026-10-08"] == {"yes": "700 1100 11000", "no": "702"}  # numeric order
+    t.prune(date(2026, 11, 12))  # 35 days kept
+    assert list(t.days) == ["2026-10-08"]
+    t.save(tmp_path / "trains.json")
+    assert Trains.load(tmp_path / "trains.json").days == t.days
+    assert Trains.load(tmp_path / "none.json").days == {}
+
+
+def test_trains_get_their_own_key_and_are_published_whole(tmp_path):
+    assert Publisher("a", "n", "t").url.endswith("/values/lifts")
+    p = Publisher("a", "n", "t", dry_run_file=tmp_path / "trains-out.json", key="trains")
+    assert p.url.endswith("/values/trains")
+    t = Trains({"2026-10-07": {"1885": "J"}})
+    p.publish(t.payload(NOW), NOW)
+    assert '"1885"' in (tmp_path / "trains-out.json").read_text() and p.last_try == NOW
 
 
 def test_the_state_survives_a_restart(tmp_path):

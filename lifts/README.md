@@ -1,6 +1,8 @@
-# lifts — live lift status for Trapvrij
+# lifts — live lift status for Trapvrij (and which trains run without steps)
 
-A small listener for Daan's home server. It follows the live lift feed (SIRI-FM via NDOV Loket, CC0) and keeps Cloudflare up to date with which lifts are out of order. The site reads that through `functions/api/lifts.js`.
+A small listener for Daan's home server. It does two things, both from NDOV Loket's open data (CC0):
+- It follows the live lift feed (SIRI-FM) and keeps Cloudflare up to date with which lifts are out of order. The site reads that through `functions/api/lifts.js`.
+- It follows NS's journey messages (InfoPlus RIT), in which NS marks every train unit accessible or not. It keeps a record of which trains ran with accessible units only. The build reads that through `functions/api/trains.js` to decide which trains count as "without steps" (`docs/DECISIONS.md`, 2026-10-07).
 
 Why it works this way: `docs/DECISIONS.md` (2026-10-02) and `audit/REPORT.md` Q5. The short version:
 - The feed is a push stream: the status of all lifts every night around 04:02, and changes as they happen.
@@ -14,6 +16,9 @@ Why it works this way: `docs/DECISIONS.md` (2026-10-02) and `audit/REPORT.md` Q5
 - Saves that state in a Docker volume, so a restart carries on where it stopped.
 - Publishes to Cloudflare when the set of broken lifts changes (at most every 2 minutes), and at least every 10 minutes, so the site can see it's alive.
 - Never publishes something implausible: no full status yet, fewer than 300 lifts, or more than half out. The site then shows the last good status until it's too old, and after that "unknown".
+- **Trains:** a second connection, to a different stream (so still one per stream).
+  - Per service date it keeps which train numbers ran with accessible units only, and which with at least one that isn't. One unit that isn't is enough for that day.
+  - It keeps 35 days, saved every 10 minutes (`trains.json` in the volume), and publishes them every hour under the key `trains` in the same store.
 - Only makes outgoing connections; nothing on your network is opened up.
 
 ## Cloudflare: the store and its key
@@ -43,11 +48,13 @@ docker compose up -d --build
 docker compose logs -f  # Ctrl+C stops watching; the listener keeps running
 ```
 
-In the log you should see `connected to tcp://pubsub.besteffort.ndovloket.nl:7666`.
+In the log you should see two lines: `connected to tcp://pubsub.besteffort.ndovloket.nl:7666` (lifts) and `connected to tcp://pubsub.besteffort.ndovloket.nl:7664` (trains).
 
-**Until the first full status arrives, it doesn't publish.** That happens at around 04:02 at night. Before then it logs `not publishing: no full state yet`, which is expected. After that, it logs `published: 50 of 443 lifts out, 1 just back` whenever a lift changes (at most every 2 minutes), and at least every 10 minutes.
+**Until the first full status arrives, it doesn't publish lifts.** That happens at around 04:02 at night. Before then it logs `not publishing: no full state yet`, which is expected. After that, it logs `published: 50 of 443 lifts out, 1 just back` whenever a lift changes (at most every 2 minutes), and at least every 10 minutes.
 
-To test without publishing, put `DRY_RUN=1` in `.env`: it then writes `/data/lifts.json` inside the volume instead.
+Trains go out within a minute of starting, then every hour: `trains published: 12 days; yesterday 5812 trains, 4903 with accessible units only`.
+
+To test without publishing, put `DRY_RUN=1` in `.env`: it then writes `/data/lifts.json` and `/data/trains-out.json` inside the volume instead.
 
 ## Day to day
 
@@ -66,4 +73,4 @@ It restarts by itself after a crash or a reboot (`restart: unless-stopped`). Log
 uv sync && uv run pytest
 ```
 
-CI runs the same tests and checks that the image builds (`.github/workflows/test.yml`).
+CI runs the same tests and checks that the image builds (`.github/workflows/test.yml`). `testdata/` holds three real journey messages of 7 Oct 2026 (NDOV Loket, CC0): a five-car ICNG (accessible), the ICNG built for Brussels (not), and double-deckers.

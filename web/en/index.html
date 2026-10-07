@@ -69,10 +69,10 @@
           <fieldset>
             <legend>Trains</legend>
             <div class="segments">
-              <label><input type="radio" name="trains" value="sprinter" /><span>Sprinters and stopping trains</span></label>
-              <label><input type="radio" name="trains" value="all" /><span>Intercity trains too</span></label>
+              <label><input type="radio" name="trains" value="sprinter" /><span>Without steps</span></label>
+              <label><input type="radio" name="trains" value="all" /><span>All trains</span></label>
             </div>
-            <p class="hint">Sprinters and stopping trains have no steps inside the train.</p>
+            <p class="hint">Without steps: sprinters, stopping trains and intercity services that NS always runs with the new ICNG.</p>
           </fieldset>
           <fieldset>
             <legend>Day</legend>
@@ -119,7 +119,7 @@
     <footer class="foot">
       <p id="data-dates"></p>
       <p>
-        Sources: timetable from OVapi / Stichting OpenGeo; station accessibility and lift status from DOVA and ProRail via NDOV Loket (CC0); transfer times from NS via
+        Sources: timetable from OVapi / Stichting OpenGeo; station accessibility and lift status from DOVA and ProRail via NDOV Loket (CC0); transfer times and train types from NS via
         NDOV Loket (CC0). Map: OpenFreeMap, © OpenMapTiles, © OpenStreetMap contributors.
       </p>
       <p>No cookies. We count visits anonymously with Cloudflare Web Analytics. Not affiliated with NS or ProRail. <a href="/en/station/">All stations</a></p>
@@ -148,9 +148,13 @@
           <li>We use the timetable of an ordinary weekday and of a Saturday, for departures between 08:30 and 12:00.</li>
           <li>With a pram, you only get on, get off and change trains at platforms you can reach without stairs. Changing on the same platform is always fine. We add 3 minutes to every change.</li>
           <li>If we don't know whether a station or platform is step-free, we don't count it.</li>
-          <li>"Sprinters and stopping trains": trains without steps inside. Intercity trains often have them.</li>
           <li>
-            More options never make a journey longer. If you allow changes or intercity trains, we show the way of travelling with the shortest usual travel time.
+            "Without steps": trains with no steps inside. That's sprinters, most stopping trains and intercity services that run as the new ICNG. We go by
+            NS, which marks every train as accessible or not. A train only counts if NS marked it accessible every time in the last four weeks, an intercity
+            only after three times. NS occasionally runs a different train.
+          </li>
+          <li>
+            More options never make a journey longer. If you allow changes or all trains, we show the way of travelling with the shortest usual travel time.
             If the direct train is quicker, you'll see the direct train.
           </li>
         </ul>
@@ -169,7 +173,7 @@
         <h3>Sources</h3>
         <p>
           Station accessibility: DOVA and ProRail, via NDOV Loket (open data, CC0), updated daily. Lift status: DOVA via NDOV Loket (CC0), updated continuously.
-          Timetable: OVapi / Stichting OpenGeo. Transfer times: NS via NDOV Loket. Map: OpenFreeMap and OpenStreetMap. This site is not affiliated with NS or ProRail.
+          Timetable: OVapi / Stichting OpenGeo. Transfer times and which train runs: NS via NDOV Loket (CC0). Map: OpenFreeMap and OpenStreetMap. This site is not affiliated with NS or ProRail.
         </p>
         <h3>Spotted a mistake?</h3>
         <p>

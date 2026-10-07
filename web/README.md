@@ -62,7 +62,7 @@ Dutch is the default at `/`; English lives under `/en/` (DECISIONS 2026-10-07).
 | `src/combobox.ts` | The search box, following the WAI-ARIA combobox pattern. |
 | `src/list.ts` | The results as a list: the accessible equivalent of the map. Also the legend. |
 | `src/map.ts` | The map (loaded after the page). Travel time by colour; every other state by shape. |
-| `src/panel.ts` | The station dialog: step-free status with source and date, the journey, lifts, links to NS to double-check. |
+| `src/panel.ts` | The station dialog: step-free status with source and date, the journey, lifts, links to NS to double-check. A journey that relies on an intercity without steps (usually the ICNG) gets a note that NS sometimes runs another train. |
 | `src/format.ts` | Wording for durations, changes, frequencies, dates and statuses, in the page's language. |
 | `src/i18n.ts` | The page's language, `tr()` for `{ nl, en }` texts, and the path of a page in the other language. |
 | `src/contact.ts` | The address for error reports, and mailto links with the subject filled in. |
@@ -74,6 +74,7 @@ Dutch is the default at `/`; English lives under `/en/` (DECISIONS 2026-10-07).
 
 - **Never colour alone.** Travel time is a blue ramp of five bands; the other states have their own shapes, and the legend and list say everything in words.
 - **Unknown is not step-free.** With a pram, stations with unknown access are shown as such and never counted as reachable.
+- **Trains without steps** ("Zonder trapjes", the `sprinter` set) follow NS's own mark per train; the pipeline decides (DECISIONS 2026-10-07).
 - **The list works without the map.** If the tiles or WebGL fail, a note replaces the map.
 - **No cookies, no storage.** State lives in the URL only. The tiles (OpenFreeMap) set no cookies either. Visits are counted anonymously with Cloudflare Web Analytics, which sets no cookies either; the footer says so. Cloudflare adds its script itself, so there's no code for it here.
 - **Dutch and English UI**, every text in both; code and comments in English.

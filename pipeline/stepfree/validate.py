@@ -111,6 +111,8 @@ def validate(build: Path, partial: bool = False) -> None:
                                 errors.append(f"{where} k={k}: malformed {e}")
                             elif tracks is not None and len(tracks) != 2 + 2 * changes:
                                 errors.append(f"{where} k={k}: tracks don't fit the changes {e}")
+                            elif len(e) > 6 and (e[6] != 1 or len(e) > 7):
+                                errors.append(f"{where} k={k}: malformed intercity mark {e}")
         errors += _never_worse(o, doc["results"], MEDIAN, "a longer typical time")
         if len(errors) > 50:
             break

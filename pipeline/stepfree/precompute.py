@@ -38,9 +38,13 @@ class Summary:
     # Tracks of the typical journey, for lift warnings on the platforms actually used:
     # departure, then arrival and departure at each change, then arrival ("?" = not in the timetable).
     tracks: tuple[str, ...] = ()
+    # The typical journey takes an intercity that counts as without steps because NS marks it accessible
+    # (usually the ICNG): the site says so, as NS sometimes runs another train.
+    intercity: bool = False
 
     def encode(self) -> list:
-        return [self.median, self.fastest, self.per_hour, self.changes, "|".join(self.via), "|".join(self.tracks)]
+        entry = [self.median, self.fastest, self.per_hour, self.changes, "|".join(self.via), "|".join(self.tracks)]
+        return entry + [1] if self.intercity else entry
 
 
 def summarise(net: Network, journeys: list[Journey]) -> Summary | None:
@@ -61,6 +65,7 @@ def summarise(net: Network, journeys: list[Journey]) -> Summary | None:
         changes=typical.changes,
         via=via,
         tracks=tuple(tracks),
+        intercity=any(net.accessible_intercity[leg.trip] for leg in legs) if net.accessible_intercity else False,
     )
 
 

@@ -15,7 +15,7 @@ from dataclasses import dataclass, field
 import polars as pl
 
 from .access import Station
-from .config import DEFAULT_TRANSFER, MIN_SAME_PLATFORM, STROLLER_BUFFER, in_train_set
+from .config import DEFAULT_TRANSFER, MIN_SAME_PLATFORM, STROLLER_BUFFER, by_category, in_train_set
 from .gtfs import DayTimetable
 
 MAX_CONTINUATION_GAP = 5  # minutes a train may wait at a platform before continuing under a new number
@@ -48,6 +48,8 @@ class Network:
     trip_labels: list[str]  # "Sprinter 7432"
     forbidden: set[tuple[int, int]]  # (arriving trip, departing trip) that NS says don't connect
     pair_min_gap: dict[tuple[int, int], int]  # (stop, stop) -> shortest connection NS explicitly allows
+    # trips in the "sprinter" set only because NS marks them accessible: an intercity without steps (usually the ICNG)
+    accessible_intercity: list[bool] = field(default_factory=list)
 
 
 @dataclass
@@ -82,13 +84,18 @@ def _continuations(tt: DayTimetable, events: dict[str, list[dict]]) -> dict[str,
     return {k: v for k, v in nxt.items() if v}
 
 
-def build(tt: DayTimetable, train_set: str) -> Network:
+def build(tt: DayTimetable, train_set: str, step_free: dict[str, bool] | None = None) -> Network:
+    """`step_free`: NS's verdict per train number for this day (trains.verdicts); only the "sprinter" set uses it."""
+    step_free = step_free or {}
     trips = tt.trips.filter(
-        pl.struct("agency_name", "category").map_elements(
-            lambda s: in_train_set(s["agency_name"], s["category"], train_set), return_dtype=pl.Boolean
+        pl.struct("agency_name", "category", "train_number").map_elements(
+            lambda s: in_train_set(s["agency_name"], s["category"], train_set, step_free.get(s["train_number"])),
+            return_dtype=pl.Boolean,
         )
     )
     label = {r["trip_id"]: f"{r['category']} {r['train_number']}" for r in trips.iter_rows(named=True)}
+    intercity = {r["trip_id"] for r in trips.iter_rows(named=True)
+                 if train_set == "sprinter" and not by_category(r["agency_name"], r["category"])}
     events: dict[str, list[dict]] = defaultdict(list)
     for r in tt.stop_times.filter(pl.col("trip_id").is_in(trips["trip_id"].implode())).iter_rows(named=True):
         events[r["trip_id"]].append(r)
@@ -127,13 +134,14 @@ def build(tt: DayTimetable, train_set: str) -> Network:
         station_stops[st].append(s)
 
     # routes: group by platform sequence, split where a trip would overtake another
-    trip_ids, trip_labels = [], []
+    trip_ids, trip_labels, accessible_intercity = [], [], []
     patterns: dict[tuple[int, ...], list[tuple[int, list[dict]]]] = defaultdict(list)
     trip_of: dict[str, int] = {}
     for chain, seq in merged:
         g = len(trip_ids)
         trip_ids.append("+".join(chain))
         trip_labels.append(" → ".join(dict.fromkeys(label[c] for c in chain)))
+        accessible_intercity.append(any(c in intercity for c in chain))
         for c in chain:
             trip_of[c] = g
         patterns[tuple(stop_key[(e["station"], e["platform"])] for e in seq)].append((g, seq))
@@ -184,6 +192,7 @@ def build(tt: DayTimetable, train_set: str) -> Network:
         day=tt.day.isoformat(), train_set=train_set, station_codes=station_codes, station_index=station_index,
         stop_station=stop_station, stop_platform=stop_platform, station_stops=station_stops, routes=routes,
         routes_at=routes_at, trip_ids=trip_ids, trip_labels=trip_labels, forbidden=forbidden, pair_min_gap=pair_min_gap,
+        accessible_intercity=accessible_intercity,
     )
 
 

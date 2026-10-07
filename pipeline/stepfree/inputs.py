@@ -18,7 +18,7 @@ from pathlib import Path
 
 import requests
 
-from . import access
+from . import access, trains
 from .config import CACHE, GTFS_URL, IFF_URL, OVERRIDES, ROOT, USER_AGENT
 from .fetch import fetch
 
@@ -47,6 +47,7 @@ def fingerprint() -> dict[str, str]:
         "iff": _sha([CACHE / "ns-latest.zip"]),
         "overrides": _sha([OVERRIDES]),
         "code": _sha(code),
+        "trains": trains.digest(trains.load(), date.today()),  # NS's marks: only the verdicts, not every new day
     }
 
 

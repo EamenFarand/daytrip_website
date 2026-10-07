@@ -92,6 +92,11 @@ Verify current URLs, formats, licences and access requirements yourself; don't t
 - Every page also in English under `/en/`, with a "NL | EN" switch in the header that keeps the page and the view.
 - Same rules as the Dutch pages: works without JavaScript, `hreflang` links between the twins, both languages in the sitemap, no cookies or storage.
 
+### Trains without steps from NS's own data
+*Added 2026-10-07 at Daan's request; built the same day (DECISIONS 2026-10-07).*
+- The lift listener also records NS's accessible mark per train unit; the build counts a train as without steps from four weeks of it. That brings in intercities that run as the ICNG, and drops regional trains NS marks not accessible.
+- A journey that relies on such an intercity says so; the train option is "Zonder trapjes" / "Alle treinen".
+
 ### Housekeeping
 - Done: Nextcloud ignores `.git`, `node_modules` and `.venv` (and `.env`); checked on 3 Oct.
 - *Added 2026-10-03 after a check of the live site:*
