@@ -9,7 +9,7 @@ Needs Node 20.19+ (developed on 24) and a pipeline build (`cd pipeline && uv run
 ```bash
 npm install
 npm run dev          # http://localhost:5173, data served from the pipeline build
-npm test             # unit tests (vitest): search, results, URL state
+npm test             # unit tests (vitest): search, results, URL state, lifts, both languages, the pages
 npm run build:site   # type-check, build, and copy the data next to it
 npm run preview      # serve the built site on http://localhost:4173
 ```
@@ -35,17 +35,27 @@ And the live lift status from `/api/lifts`. In production that's `functions/api/
 
 ## Pages
 
-`npm run build:site` builds the app, copies the data, then runs `scripts/pages.ts`. That script writes, from the data:
+`npm run build:site` builds the app, copies the data, then runs `scripts/pages.ts`. That script writes, from the data, in Dutch and under `/en/` in English:
 - `/station/<slug>/` for every station: its own title, description and canonical URL, and an intro that works without JavaScript. The app on that page starts from that station.
 - `/station/`: all stations as plain links.
-- `404.html`, `sitemap.xml`, and `_redirects` (old `/station/<CODE>` links go to the page).
+- `404.html` (and `/en/404.html`: Cloudflare Pages serves the nearest one).
+- Once, for both languages: `sitemap.xml`, and `_redirects` (old `/station/<CODE>` links go to the page).
+
+## Two languages
+
+Dutch is the default at `/`; English lives under `/en/` (DECISIONS 2026-10-07).
+- **Two page shells:** `index.html` and `en/index.html`. Change both: a test (`src/i18n.test.ts`) checks they have the same elements in the same order.
+- **One app:** it reads `<html lang>`. Texts in the code are `{ nl, en }` pairs passed to `tr()` (`src/i18n.ts`), so a missing translation doesn't type-check. `scripts/pages.ts` switches the language with `useLang()` per page it writes.
+- **The switch** ("NL | EN" in the header) links to the same page and view in the other language. The hash keys are the same in both languages, so links work in either.
+- **Wording:** British English; "pram" for kinderwagen, "platform" for spoor (as NS's English site does). Links to NS go to its English pages.
+- No language detection and nothing remembered: the URL is the choice.
 
 ## Code
 
 | File | Does |
 |---|---|
 | `src/main.ts` | Wires everything: loads data, keeps the state, renders on change. |
-| `src/state.ts` | The chosen origin (in the path, `/station/<slug>/`) and filters (in the hash, `#overstap=2&max=alles`); defaults are left out, and old `#van=` links still work. |
+| `src/state.ts` | The chosen origin (in the path, `/station/<slug>/` or `/en/station/<slug>/`) and filters (in the hash, `#overstap=2&max=alles`); defaults are left out, and old `#van=` links still work. |
 | `src/lifts.ts` | How fresh the lift status is, which lifts out matter for a journey (the tracks it uses), and the words for each status (out, unknown, just back). |
 | `src/results.ts` | Turns an origin file plus the filters into one verdict per station (reachable, out of reach, not step-free, unknown). |
 | `src/search.ts` | Station search that tolerates typos, accents and shorthand ("Utrecht CS", "A'dam", "Den Bosch"). |
@@ -53,7 +63,8 @@ And the live lift status from `/api/lifts`. In production that's `functions/api/
 | `src/list.ts` | The results as a list: the accessible equivalent of the map. Also the legend. |
 | `src/map.ts` | The map (loaded after the page). Travel time by colour; every other state by shape. |
 | `src/panel.ts` | The station dialog: step-free status with source and date, the journey, lifts, links to NS to double-check. |
-| `src/format.ts` | Dutch wording for durations, changes, frequencies and statuses. |
+| `src/format.ts` | Wording for durations, changes, frequencies, dates and statuses, in the page's language. |
+| `src/i18n.ts` | The page's language, `tr()` for `{ nl, en }` texts, and the path of a page in the other language. |
 | `src/contact.ts` | The address for error reports, and mailto links with the subject filled in. |
 | `src/colors.ts` | The travel-time colours for light and dark mode. |
 
@@ -65,7 +76,7 @@ And the live lift status from `/api/lifts`. In production that's `functions/api/
 - **Unknown is not step-free.** With a pram, stations with unknown access are shown as such and never counted as reachable.
 - **The list works without the map.** If the tiles or WebGL fail, a note replaces the map.
 - **No cookies, no storage.** State lives in the URL only. The tiles (OpenFreeMap) set no cookies either. Visits are counted anonymously with Cloudflare Web Analytics, which sets no cookies either; the footer says so. Cloudflare adds its script itself, so there's no code for it here.
-- **Dutch UI**, code and comments in English.
+- **Dutch and English UI**, every text in both; code and comments in English.
 
 ## Accessibility checks
 

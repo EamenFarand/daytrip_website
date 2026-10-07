@@ -3,7 +3,8 @@ import "./style.css";
 import { Combobox } from "./combobox";
 import { REPORT_EMAIL, reportLink } from "./contact";
 import { loadLifts, loadMeta, loadOrigin, loadStations } from "./data";
-import { clock, duration, longDate, pageTitle, shortDate } from "./format";
+import { duration, longDate, pageTitle, shortDate, windowText as windowWords } from "./format";
+import { inLang, lang, other, tr } from "./i18n";
 import { freshness, journeyWarnings } from "./lifts";
 import { renderLegend, renderList } from "./list";
 import { RAMP } from "./colors";
@@ -22,7 +23,7 @@ async function start(): Promise<void> {
   try {
     [meta, stations] = await Promise.all([loadMeta(), loadStations()]);
   } catch (e) {
-    summary.textContent = "De gegevens konden niet worden geladen. Probeer het later opnieuw.";
+    summary.textContent = tr({ nl: "De gegevens konden niet worden geladen. Probeer het later opnieuw.", en: "The data could not be loaded. Please try again later." });
     console.error(e);
     return;
   }
@@ -30,7 +31,7 @@ async function start(): Promise<void> {
   const bySlug = new Map(stations.map((s) => [s.slug, s]));
   const known = (code: string) => byCode.has(code);
   const [winStart, winEnd] = meta.window;
-  const windowText = `${clock(winStart)} en ${clock(winEnd)}`;
+  const windowText = windowWords(winStart, winEnd);
   const dark = window.matchMedia("(prefers-color-scheme: dark)");
   const ramp = () => RAMP[dark.matches ? "dark" : "light"];
 
@@ -39,22 +40,34 @@ async function start(): Promise<void> {
   const urlFor = (s: State) => pagePath(s.origin ? (byCode.get(s.origin)?.slug ?? null) : null) + toHash(s);
   let state: State = fromHash(location.hash, known);
   state.origin ??= pageOrigin();
-  history.replaceState(null, "", urlFor(state));
+  // The language switch leads to the same page and view in the other language.
+  const langSwitch = document.getElementById("lang-switch") as HTMLAnchorElement | null;
+  const switchTo = (url: string) => {
+    if (langSwitch) langSwitch.href = inLang(url, other(lang));
+  };
+  const showUrl = () => {
+    const url = urlFor(state);
+    history.replaceState(null, "", url);
+    switchTo(url);
+  };
+  showUrl();
   const intro = $("intro"); // a station page's own text, for search engines and visitors without JavaScript
   let doc: OriginDoc | null = null;
   let loading = false;
   let lifts: LiftStatus | null = null;
 
-  $("data-dates").textContent =
-    `Bijgewerkt op ${shortDate(meta.built)}. Reistijden volgens de dienstregeling van ${longDate(meta.days.weekday)} en ${longDate(meta.days.saturday)}; ` +
-    `toegankelijkheid volgens de gegevens van ${shortDate(meta.epiap_date)}.`;
+  const [built, weekday, saturday, epiap] = [shortDate(meta.built), longDate(meta.days.weekday), longDate(meta.days.saturday), shortDate(meta.epiap_date)];
+  $("data-dates").textContent = tr({
+    nl: `Bijgewerkt op ${built}. Reistijden volgens de dienstregeling van ${weekday} en ${saturday}; toegankelijkheid volgens de gegevens van ${epiap}.`,
+    en: `Updated on ${built}. Travel times from the timetable for ${weekday} and ${saturday}; accessibility from the data of ${epiap}.`,
+  });
 
   // --- controls ---------------------------------------------------------------------------
   const form = $("filters") as HTMLFormElement;
   const range = $("max-time") as HTMLInputElement;
   const rangeOut = $("max-time-out") as HTMLOutputElement;
   range.max = String(MINUTE_STEPS.length - 1);
-  const minutesText = (m: number) => (m >= MAX_MINUTES ? "geen grens" : duration(m));
+  const minutesText = (m: number) => (m >= MAX_MINUTES ? tr({ nl: "geen grens", en: "no limit" }) : duration(m));
 
   form.addEventListener("change", (e) => {
     const t = e.target as HTMLInputElement;
@@ -82,12 +95,13 @@ async function start(): Promise<void> {
     range.value = String(Math.max(0, MINUTE_STEPS.indexOf(state.maxMinutes)));
     rangeOut.value = minutesText(state.maxMinutes);
     range.setAttribute("aria-valuetext", minutesText(state.maxMinutes));
+    const n = state.maxChanges;
     $("filters-summary").textContent = [
-      state.profile === "stroller" ? "kinderwagen" : "zonder beperking",
-      state.trains === "sprinter" ? "sprinters" : "ook intercity's",
-      state.day === "weekday" ? "doordeweeks" : "zaterdag",
-      state.maxChanges === 0 ? "geen overstap" : `max. ${state.maxChanges} overstap${state.maxChanges > 1 ? "pen" : ""}`,
-      state.maxMinutes >= MAX_MINUTES ? "elke reistijd" : `max. ${duration(state.maxMinutes)}`,
+      state.profile === "stroller" ? tr({ nl: "kinderwagen", en: "pram" }) : tr({ nl: "zonder beperking", en: "without a pram" }),
+      state.trains === "sprinter" ? "sprinters" : tr({ nl: "ook intercity's", en: "intercity too" }),
+      state.day === "weekday" ? tr({ nl: "doordeweeks", en: "weekday" }) : tr({ nl: "zaterdag", en: "Saturday" }),
+      n === 0 ? tr({ nl: "geen overstap", en: "no changes" }) : tr({ nl: `max. ${n} overstap${n > 1 ? "pen" : ""}`, en: `max. ${n} change${n > 1 ? "s" : ""}` }),
+      state.maxMinutes >= MAX_MINUTES ? tr({ nl: "elke reistijd", en: "any travel time" }) : `max. ${duration(state.maxMinutes)}`,
     ].join(" · ");
   }
 
@@ -130,13 +144,13 @@ async function start(): Promise<void> {
   }
   stationDialog.addEventListener("close", () => state.selected && closeStation());
   $("about-open").addEventListener("click", () => aboutDialog.showModal());
-  $("report-mail").replaceChildren(reportLink(REPORT_EMAIL, "Trapvrij: fout gezien"));
+  $("report-mail").replaceChildren(reportLink(REPORT_EMAIL, tr({ nl: "Trapvrij: fout gezien", en: "Trapvrij: error spotted" })));
 
   // --- state --------------------------------------------------------------------------------
   function setState(patch: Partial<State>): void {
     const originChanged = patch.origin !== undefined && patch.origin !== state.origin;
     state = { ...state, ...patch };
-    history.replaceState(null, "", urlFor(state));
+    showUrl();
     if (originChanged) {
       const origin = state.origin ? byCode.get(state.origin) : undefined;
       if (origin) map?.reveal(origin.lon, origin.lat);
@@ -169,13 +183,14 @@ async function start(): Promise<void> {
   window.addEventListener("hashchange", () => {
     if (location.hash && !location.hash.includes("=")) {
       // an in-page link such as #results, not a new state: put the state back in the URL
-      history.replaceState(null, "", urlFor(state));
+      showUrl();
       return;
     }
     const next = fromHash(location.hash, known);
     next.origin ??= pageOrigin();
     const originChanged = next.origin !== state.origin;
     state = next;
+    switchTo(urlFor(state));
     if (originChanged) void refresh();
     else render();
   });
@@ -216,7 +231,6 @@ async function start(): Promise<void> {
         meta,
         names: byCode,
         origin: usable ? (origin ?? null) : null,
-        dayLabel: state.day === "weekday" ? "doordeweeks" : "op zaterdag",
         dayIso: meta.days[state.day],
         lifts,
         fresh: freshness(lifts, new Date()),
@@ -233,21 +247,37 @@ async function start(): Promise<void> {
   }
 
   function describe(origin: Station | undefined, usable: boolean, count: number): string {
-    if (!origin) return "Kies een vertrekstation om te zien waar je naartoe kunt.";
+    if (!origin) return tr({ nl: "Kies een vertrekstation om te zien waar je naartoe kunt.", en: "Choose a starting station to see where you can go." });
+    const name = origin.name;
     if (!usable) {
       const why =
         origin.status === "no"
-          ? `${origin.name} is niet drempelvrij. Met de kinderwagen kun je hier niet vertrekken.`
-          : `Van ${origin.name} weten we niet of het drempelvrij is, dus we rekenen er niet mee.`;
-      return `${why} Kies een ander station, of kies "Zonder beperking".`;
+          ? tr({ nl: `${name} is niet drempelvrij. Met de kinderwagen kun je hier niet vertrekken.`, en: `${name} is not step-free, so you can't start here with a pram.` })
+          : tr({ nl: `Van ${name} weten we niet of het drempelvrij is, dus we rekenen er niet mee.`, en: `We don't know whether ${name} is step-free, so we don't count it.` });
+      return `${why} ${tr({ nl: 'Kies een ander station, of kies "Zonder beperking".', en: 'Choose another station, or choose "Without a pram".' })}`;
     }
-    if (loading) return `Reizen vanaf ${origin.name} worden geladen…`;
-    if (!doc) return "De reizen vanaf dit station konden niet worden geladen. Probeer het later opnieuw.";
-    const time = state.maxMinutes >= MAX_MINUTES ? "" : ` binnen ${duration(state.maxMinutes)}`;
-    const ch = state.maxChanges === 0 ? "zonder overstap" : `met hoogstens ${state.maxChanges} overstap${state.maxChanges > 1 ? "pen" : ""}`;
-    const trains = state.trains === "sprinter" ? "sprinters en stoptreinen" : "alle treinen";
-    const day = state.day === "weekday" ? "doordeweeks" : "op zaterdag";
-    return `Vanaf ${origin.name}: ${count} station${count === 1 ? "" : "s"} bereikbaar${time}, ${ch} (${trains}, ${day}).`;
+    if (loading) return tr({ nl: `Reizen vanaf ${name} worden geladen…`, en: `Loading journeys from ${name}…` });
+    if (!doc) {
+      return tr({
+        nl: "De reizen vanaf dit station konden niet worden geladen. Probeer het later opnieuw.",
+        en: "The journeys from this station could not be loaded. Please try again later.",
+      });
+    }
+    const limit = state.maxMinutes >= MAX_MINUTES ? null : duration(state.maxMinutes);
+    const n = state.maxChanges;
+    const s = count === 1 ? "" : "s";
+    const sprinters = state.trains === "sprinter";
+    const weekday = state.day === "weekday";
+    return tr({
+      nl:
+        `Vanaf ${name}: ${count} station${s} bereikbaar${limit ? ` binnen ${limit}` : ""}, ` +
+        `${n === 0 ? "zonder overstap" : `met hoogstens ${n} overstap${n > 1 ? "pen" : ""}`} ` +
+        `(${sprinters ? "sprinters en stoptreinen" : "alle treinen"}, ${weekday ? "doordeweeks" : "op zaterdag"}).`,
+      en:
+        `From ${name}: ${count} station${s} you can reach${limit ? ` within ${limit}` : ""}, ` +
+        `${n === 0 ? "without changing" : `with at most ${n} change${n > 1 ? "s" : ""}`} ` +
+        `(${sprinters ? "sprinters and stopping trains" : "all trains"}, ${weekday ? "on a weekday" : "on Saturday"}).`,
+    });
   }
 
   dark.addEventListener("change", () => render());

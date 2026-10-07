@@ -1,0 +1,184 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light dark" />
+    <!-- ../index.html is the same page in Dutch: change both (a test checks they match).
+         scripts/pages.ts fills these in per station page. -->
+    <meta name="description" content="Choose a Dutch railway station and see where you can go by train with a pram, without stairs: travel time, changes and step-free access for every station." />
+    <title>Trapvrij – where can you go with a pram?</title>
+    <link rel="canonical" href="https://trapvrij.nl/en/" />
+    <link rel="alternate" hreflang="nl" href="https://trapvrij.nl/" />
+    <link rel="alternate" hreflang="en" href="https://trapvrij.nl/en/" />
+    <link rel="alternate" hreflang="x-default" href="https://trapvrij.nl/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="en_GB" />
+    <meta property="og:locale:alternate" content="nl_NL" />
+    <meta property="og:site_name" content="Trapvrij" />
+    <meta property="og:title" content="Trapvrij – where can you go with a pram?" />
+    <meta property="og:description" content="Choose a Dutch railway station and see where you can go by train with a pram, without stairs: travel time, changes and step-free access for every station." />
+    <meta property="og:url" content="https://trapvrij.nl/en/" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <noscript><style>.controls, .status-area, .map-wrap, .list, .skip { display: none !important; }</style></noscript>
+  </head>
+  <body>
+    <a class="skip" href="#results">Skip to the list of stations</a>
+
+    <header class="top">
+      <div>
+        <h1>Trapvrij</h1>
+        <p class="tagline">Where can you go by train in the Netherlands without stairs? Choose your starting station.</p>
+      </div>
+      <div class="top-actions">
+        <nav class="lang" aria-label="Language">
+          <a id="lang-switch" href="/" hreflang="nl" lang="nl">NL<span class="visually-hidden"> Nederlands</span></a>
+          <span aria-current="true">EN<span class="visually-hidden"> English</span></span>
+        </nav>
+        <button type="button" class="link-button" id="about-open">About this map</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section id="intro" class="intro" hidden></section>
+      <noscript>
+        <p class="noscript">The map and the search need JavaScript. Without it, you'll find every station in the <a href="/en/station/">list of all stations</a>.</p>
+      </noscript>
+
+      <section class="controls" aria-label="Starting station and options">
+        <div class="search">
+          <label for="origin" class="field-label">Starting station</label>
+          <div class="combo">
+            <input id="origin" type="text" autocomplete="off" spellcheck="false" placeholder="For example Amsterdam or Utrecht" />
+            <ul id="origin-list" class="combo-list" hidden></ul>
+          </div>
+          <p id="origin-status" class="visually-hidden" role="status" aria-live="polite"></p>
+        </div>
+
+        <details id="filters-box" class="filters-box">
+          <summary><span>Options:</span> <span id="filters-summary" class="filters-summary"></span></summary>
+        <form id="filters" class="filters">
+          <fieldset>
+            <legend>You're travelling</legend>
+            <div class="segments">
+              <label><input type="radio" name="profile" value="stroller" /><span>With a pram</span></label>
+              <label><input type="radio" name="profile" value="any" /><span>Without a pram</span></label>
+              <label class="soon"><input type="radio" name="profile" value="wheelchair" disabled /><span>Wheelchair <small>(coming later)</small></span></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Trains</legend>
+            <div class="segments">
+              <label><input type="radio" name="trains" value="sprinter" /><span>Sprinters and stopping trains</span></label>
+              <label><input type="radio" name="trains" value="all" /><span>Intercity trains too</span></label>
+            </div>
+            <p class="hint">Sprinters and stopping trains have no steps inside the train.</p>
+          </fieldset>
+          <fieldset>
+            <legend>Day</legend>
+            <div class="segments">
+              <label><input type="radio" name="day" value="weekday" /><span>Weekday</span></label>
+              <label><input type="radio" name="day" value="saturday" /><span>Saturday</span></label>
+            </div>
+          </fieldset>
+          <fieldset>
+            <legend>Maximum changes</legend>
+            <div class="segments">
+              <label><input type="radio" name="changes" value="0" /><span>None</span></label>
+              <label><input type="radio" name="changes" value="1" /><span>1</span></label>
+              <label><input type="radio" name="changes" value="2" /><span>2</span></label>
+            </div>
+          </fieldset>
+          <div class="range">
+            <label for="max-time" class="field-label">Maximum travel time: <output id="max-time-out" for="max-time"></output></label>
+            <input id="max-time" type="range" min="0" step="1" />
+          </div>
+        </form>
+        </details>
+      </section>
+
+      <div class="status-area">
+        <p id="summary" class="summary" role="status" aria-live="polite">Loading…</p>
+        <p class="disclaimer">
+          <strong>Please note:</strong> this is a tool for ideas, not a journey planner. Always check your journey beforehand in the
+          <a href="https://www.ns.nl/en/journeyplanner/" target="_blank" rel="noopener">NS Journey Planner</a>; a lift can also be out of order. Travelling in a wheelchair? Book
+          <a href="https://www.ns.nl/en/travel/traveling-with-a-disability/ns-travel-assistance" target="_blank" rel="noopener">NS Travel Assistance</a>.
+        </p>
+      </div>
+
+      <section class="map-wrap" aria-label="Map">
+        <p class="visually-hidden">The map shows the same stations as the list.</p>
+        <div id="map" class="map"></div>
+        <p id="map-fallback" class="map-fallback" hidden>The map isn't available right now. The list still works.</p>
+        <div id="legend" class="legend" role="group" aria-label="Legend"></div>
+      </section>
+
+      <section id="results" class="list" aria-labelledby="results-heading" tabindex="-1"></section>
+    </main>
+
+    <footer class="foot">
+      <p id="data-dates"></p>
+      <p>
+        Sources: timetable from OVapi / Stichting OpenGeo; station accessibility and lift status from DOVA and ProRail via NDOV Loket (CC0); transfer times from NS via
+        NDOV Loket (CC0). Map: OpenFreeMap, © OpenMapTiles, © OpenStreetMap contributors.
+      </p>
+      <p>No cookies. We count visits anonymously with Cloudflare Web Analytics. Not affiliated with NS or ProRail. <a href="/en/station/">All stations</a></p>
+    </footer>
+
+    <dialog id="station" class="panel" aria-labelledby="station-title">
+      <div class="panel-head">
+        <h2 id="station-title"></h2>
+        <button type="button" class="close" data-close aria-label="Close">✕</button>
+      </div>
+      <div id="station-body" class="panel-body"></div>
+    </dialog>
+
+    <dialog id="about" class="panel" aria-labelledby="about-title">
+      <div class="panel-head">
+        <h2 id="about-title">About this map</h2>
+        <button type="button" class="close" data-close aria-label="Close">✕</button>
+      </div>
+      <div class="panel-body prose">
+        <p>
+          With a pram, the question isn't just whether you can get somewhere, but whether you can get there without stairs. This map shows which stations you can
+          reach from yours, how long it takes and how often a train runs. It covers every railway station in the Netherlands.
+        </p>
+        <h3>How does it work?</h3>
+        <ul>
+          <li>We use the timetable of an ordinary weekday and of a Saturday, for departures between 08:30 and 12:00.</li>
+          <li>With a pram, you only get on, get off and change trains at platforms you can reach without stairs. Changing on the same platform is always fine. We add 3 minutes to every change.</li>
+          <li>If we don't know whether a station or platform is step-free, we don't count it.</li>
+          <li>"Sprinters and stopping trains": trains without steps inside. Intercity trains often have them.</li>
+          <li>
+            More options never make a journey longer. If you allow changes or intercity trains, we show the way of travelling with the shortest usual travel time.
+            If the direct train is quicker, you'll see the direct train.
+          </li>
+        </ul>
+        <h3>Lift outages</h3>
+        <ul>
+          <li>We show which lifts are out of order right now, or have an unknown status. If you might need such a lift on your route, you'll see a warning in the list and at the station.</li>
+          <li>An outage usually shows up here within ten minutes. Every night around 04:00, the full status of all lifts comes in again.</li>
+          <li>When a lift has just come back into service, we keep mentioning it for half an hour. Lifts sometimes break down again soon after.</li>
+          <li>If no updates come in for a while, we say so: the status may then be out of date. A lift can also break down at any moment, so check again just before you leave.</li>
+        </ul>
+        <h3>What we don't know (yet)</h3>
+        <ul>
+          <li>How steep a ramp is, or how far you have to walk.</li>
+          <li>Whether you can board the train without a step: that also depends on the type of train.</li>
+        </ul>
+        <h3>Sources</h3>
+        <p>
+          Station accessibility: DOVA and ProRail, via NDOV Loket (open data, CC0), updated daily. Lift status: DOVA via NDOV Loket (CC0), updated continuously.
+          Timetable: OVapi / Stichting OpenGeo. Transfer times: NS via NDOV Loket. Map: OpenFreeMap and OpenStreetMap. This site is not affiliated with NS or ProRail.
+        </p>
+        <h3>Spotted a mistake?</h3>
+        <p>
+          Email <span id="report-mail"></span>, in English or Dutch. Tell us the station and what's wrong. For a mistake at one station, the quickest way is the link
+          in that station's window.
+        </p>
+      </div>
+    </dialog>
+
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

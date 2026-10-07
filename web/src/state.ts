@@ -1,8 +1,10 @@
 // What the visitor has chosen, mirrored in the URL so a view can be shared:
 // the origin is the page (/station/houten-castellum/), the rest the hash (#profiel=geen&overstap=2).
+// The English pages (/en/station/houten-castellum/) use the same hash, so a view keeps across languages.
 // Older links with the origin in the hash (#van=HTNC) still work.
 // Nothing is stored anywhere else: no cookies, no local storage.
 
+import { type Lang, PREFIX, lang } from "./i18n";
 import type { Day, Profile, TrainSet } from "./types";
 
 export interface State {
@@ -69,13 +71,13 @@ export function fromHash(hash: string, known: (code: string) => boolean): State 
   };
 }
 
-/** /station/houten-castellum/ -> "houten-castellum": the station whose page this is. */
+/** /station/houten-castellum/ (or /en/station/…) -> "houten-castellum": the station whose page this is. */
 export function stationFromPath(path: string): string | null {
-  const m = path.match(/^\/station\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/);
+  const m = path.match(/^(?:\/en)?\/station\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/);
   return m ? m[1] : null;
 }
 
-/** The page for an origin: its station page, or the home page. */
-export function pagePath(slug: string | null): string {
-  return slug ? `/station/${slug}/` : "/";
+/** The page for an origin, in the page's language: its station page, or the home page. */
+export function pagePath(slug: string | null, l: Lang = lang): string {
+  return PREFIX[l] + (slug ? `/station/${slug}/` : "/");
 }

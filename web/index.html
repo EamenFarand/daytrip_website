@@ -4,12 +4,17 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
-    <!-- scripts/pages.ts fills these in per station page -->
+    <!-- en/index.html is the same page in English: change both (a test checks they match).
+         scripts/pages.ts fills these in per station page. -->
     <meta name="description" content="Kies een treinstation en zie waar je met de kinderwagen zonder trappen naartoe kunt: reistijd, overstappen en toegankelijkheid per station." />
     <title>Trapvrij – waar kun je heen met de kinderwagen?</title>
     <link rel="canonical" href="https://trapvrij.nl/" />
+    <link rel="alternate" hreflang="nl" href="https://trapvrij.nl/" />
+    <link rel="alternate" hreflang="en" href="https://trapvrij.nl/en/" />
+    <link rel="alternate" hreflang="x-default" href="https://trapvrij.nl/" />
     <meta property="og:type" content="website" />
     <meta property="og:locale" content="nl_NL" />
+    <meta property="og:locale:alternate" content="en_GB" />
     <meta property="og:site_name" content="Trapvrij" />
     <meta property="og:title" content="Trapvrij – waar kun je heen met de kinderwagen?" />
     <meta property="og:description" content="Kies een treinstation en zie waar je met de kinderwagen zonder trappen naartoe kunt: reistijd, overstappen en toegankelijkheid per station." />
@@ -25,7 +30,13 @@
         <h1>Trapvrij</h1>
         <p class="tagline">Waar kun je met de trein heen zonder trappen? Kies je vertrekstation.</p>
       </div>
-      <button type="button" class="link-button" id="about-open">Over deze kaart</button>
+      <div class="top-actions">
+        <nav class="lang" aria-label="Taal">
+          <span aria-current="true">NL<span class="visually-hidden"> Nederlands</span></span>
+          <a id="lang-switch" href="/en/" hreflang="en" lang="en">EN<span class="visually-hidden"> English</span></a>
+        </nav>
+        <button type="button" class="link-button" id="about-open">Over deze kaart</button>
+      </div>
     </header>
 
     <main class="layout">

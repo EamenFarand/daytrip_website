@@ -36,4 +36,4 @@ Daan owns this project. He does only what an AI can't: create accounts, supply A
 - **`docs/STATUS.md`** — update at the end of every session: done, in progress, next step. A fresh session must be able to continue from this file alone.
 - **`docs/DECISIONS.md`** — one short entry per non-obvious decision: what, why, what you rejected.
 - **`docs/NEEDS_DAAN.md`** — batch everything that needs Daan (accounts, keys, purchases, in-person checks, decisions) here with exact step-by-step instructions, rather than stopping for each one. Keep working on whatever doesn't depend on it.
-- Code, comments and docs in English. Site UI in Dutch first; English later.
+- Code, comments and docs in English. Site UI in Dutch (the default, at `/`) and English (under `/en/`): every text in both.

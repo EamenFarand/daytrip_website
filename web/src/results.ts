@@ -18,8 +18,7 @@ export interface Verdict {
   band: number; // 0..4 travel-time band, -1 when not reachable
 }
 
-export const BANDS = [30, 60, 90, 120, Infinity];
-export const BAND_LABELS = ["tot 30 min", "31–60 min", "61–90 min", "91–120 min", "meer dan 2 uur"];
+export const BANDS = [30, 60, 90, 120, Infinity]; // labels: list.ts
 
 export function band(minutes: number): number {
   return BANDS.findIndex((limit) => minutes <= limit);

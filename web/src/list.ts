@@ -1,15 +1,16 @@
 // The results as a list: the accessible equivalent of the map, and the easiest way to browse on a phone.
 
-import { ACCESS_ICON, ACCESS_TEXT, changes, duration, frequency } from "./format";
+import { ACCESS_ICON, accessText, changes, duration, frequency, originText, outOfReach } from "./format";
+import { tr } from "./i18n";
 import { type StationWarning, warnLine } from "./lifts";
-import { BAND_LABELS, type Verdict } from "./results";
+import type { Verdict } from "./results";
 import type { Station } from "./types";
 
 const FIRST = 30; // show the quickest ones first, the rest on request
 
 export interface ListContext {
   names: Map<string, Station>;
-  windowText: string; // "08:30 en 12:00"
+  windowText: string; // "08:30 en 12:00" (format.windowText)
   windowHours: number;
   ramp: string[];
   waiting: string | null; // why there are no results yet (no origin, loading...), or null once they're in
@@ -56,7 +57,7 @@ function item(v: Verdict, ctx: ListContext): HTMLLIElement {
       text.append(warn);
     }
   } else {
-    meta.textContent = `${ACCESS_ICON[v.station.status]} ${ACCESS_TEXT[v.station.status]}`;
+    meta.textContent = `${ACCESS_ICON[v.station.status]} ${accessText(v.station.status)}`;
     text.append(name, meta);
   }
   btn.append(mark, text);
@@ -87,12 +88,15 @@ export function renderList(container: HTMLElement, verdicts: Verdict[], ctx: Lis
   const parts: HTMLElement[] = [];
   const heading = document.createElement("h2");
   heading.id = "results-heading";
-  heading.textContent = ctx.waiting ? "Bereikbare stations" : `Bereikbare stations (${reachable.length})`;
+  const title = tr({ nl: "Bereikbare stations", en: "Reachable stations" });
+  heading.textContent = ctx.waiting ? title : `${title} (${reachable.length})`;
   parts.push(heading);
 
   if (reachable.length === 0) {
     const p = document.createElement("p");
-    p.textContent = ctx.waiting ?? "Geen stations binnen je keuzes. Probeer meer overstappen of een langere reistijd.";
+    p.textContent =
+      ctx.waiting ??
+      tr({ nl: "Geen stations binnen je keuzes. Probeer meer overstappen of een langere reistijd.", en: "No stations within your choices. Try more changes or a longer travel time." });
     parts.push(p);
   } else {
     let shown = 0;
@@ -109,7 +113,7 @@ export function renderList(container: HTMLElement, verdicts: Verdict[], ctx: Lis
       const more = document.createElement("button");
       more.type = "button";
       more.className = "more";
-      more.textContent = `Toon alle ${reachable.length} stations`;
+      more.textContent = tr({ nl: `Toon alle ${reachable.length} stations`, en: `Show all ${reachable.length} stations` });
       more.addEventListener("click", () => {
         const first = ul.querySelector<HTMLElement>("li[hidden] button");
         ul.querySelectorAll("li[hidden]").forEach((li) => ((li as HTMLElement).hidden = false));
@@ -119,9 +123,14 @@ export function renderList(container: HTMLElement, verdicts: Verdict[], ctx: Lis
       parts.push(more);
     }
   }
-  if (stroller && blocked.length) parts.push(section("Niet drempelvrij of onbekend", blocked.sort(byName), ctx, false));
-  if (outside.length) parts.push(section("Niet bereikbaar binnen je keuzes", outside.sort(byName), ctx, false));
+  if (stroller && blocked.length) parts.push(section(tr({ nl: "Niet drempelvrij of onbekend", en: "Not step-free or unknown" }), blocked.sort(byName), ctx, false));
+  if (outside.length) parts.push(section(outOfReach(), outside.sort(byName), ctx, false));
   container.replaceChildren(...parts);
+}
+
+/** The travel-time bands of results.BANDS. */
+function bandLabels(): string[] {
+  return [tr({ nl: "tot 30 min", en: "up to 30 min" }), "31–60 min", "61–90 min", "91–120 min", tr({ nl: "meer dan 2 uur", en: "over 2 hours" })];
 }
 
 /** Legend: travel-time bands (colour + text) and marker shapes (shape + text). */
@@ -132,18 +141,18 @@ export function renderLegend(
 ): void {
   const items: [string, string, string?][] = [];
   if (o.waiting) {
-    items.push(["mark mark-idle", o.stroller ? "Drempelvrij (of deels)" : "Station"]);
+    items.push(["mark mark-idle", o.stroller ? tr({ nl: "Drempelvrij (of deels)", en: "Step-free (or partly)" }) : "Station"]);
   } else {
-    BAND_LABELS.forEach((label, i) => {
+    bandLabels().forEach((label, i) => {
       const lower = [0, 30, 60, 90, 120][i];
       if (lower < o.maxMinutes) items.push(["mark mark-reachable", label, ramp[i]]);
     });
   }
-  if (o.origin) items.push(["mark mark-origin", "Vertrekstation"]);
-  if (!o.waiting) items.push(["mark mark-out-of-reach", "Niet bereikbaar binnen je keuzes"]);
+  if (o.origin) items.push(["mark mark-origin", originText()]);
+  if (!o.waiting) items.push(["mark mark-out-of-reach", outOfReach()]);
   if (o.stroller) {
-    items.push(["mark mark-not-step-free", "Niet drempelvrij"]);
-    items.push(["mark mark-unknown-access", "Toegankelijkheid onbekend"]);
+    items.push(["mark mark-not-step-free", accessText("no")]);
+    items.push(["mark mark-unknown-access", accessText("unknown")]);
   }
   const ul = document.createElement("ul");
   for (const [cls, label, color] of items) {

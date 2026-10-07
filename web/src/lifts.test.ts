@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
-import { freshness, freshnessText, journeyWarnings, liftNote, outAt, statusText, warnLine } from "./lifts";
+import { useLang } from "./i18n";
+import { freshness, freshnessText, journeyWarnings, liftNote, outAt, outText, statusText, warnLine } from "./lifts";
 import type { LiftStatus, Station } from "./types";
 
 const st = (code: string, lifts: string[] = []): Station => ({
@@ -65,5 +66,13 @@ describe("lift status", () => {
     expect(w.map(liftNote)).toEqual(["⚠ lift buiten gebruik", "⚠ lift net weer in gebruik"]); // at UT one is out, one back
     expect(warnLine(w)).toBe("⚠ Liftstoring: UT; lift net weer in gebruik: D");
     expect(warnLine(w.slice(1))).toBe("⚠ Lift net weer in gebruik: D");
+
+    useLang("en");
+    expect(statusText(b1)).toMatch(/^back in service since \d\d:\d\d, but was out of order until just now$/);
+    expect(w.map(liftNote)).toEqual(["⚠ lift out of order", "⚠ lift just back in service"]);
+    expect(warnLine(w)).toBe("⚠ Lift out of order: UT; lift just back in service: D");
+    expect(outText(outAt(UT, lifts, "live")[0])).toBe("lift UT-LIF-u1 (platform 1): out of order");
+    expect(freshnessText(null, "unknown")).toBe("The current lift status is not known right now. Check the lifts before you travel.");
+    useLang("nl");
   });
 });

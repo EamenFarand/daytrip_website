@@ -1,6 +1,7 @@
 // Station search box following the WAI-ARIA 1.2 combobox pattern (list autocomplete, no automatic selection).
 
-import { ACCESS_ICON, ACCESS_TEXT } from "./format";
+import { ACCESS_ICON, accessText } from "./format";
+import { tr } from "./i18n";
 import type { StationSearch } from "./search";
 import type { Station } from "./types";
 
@@ -40,7 +41,13 @@ export class Combobox {
     this.active = -1;
     this.render();
     const n = this.options.length;
-    this.status.textContent = this.input.value.trim() === "" ? "" : n === 0 ? "Geen station gevonden" : `${n} station${n === 1 ? "" : "s"} gevonden, gebruik pijltjestoetsen om te kiezen`;
+    const s = n === 1 ? "" : "s";
+    this.status.textContent =
+      this.input.value.trim() === ""
+        ? ""
+        : n === 0
+          ? tr({ nl: "Geen station gevonden", en: "No station found" })
+          : tr({ nl: `${n} station${s} gevonden, gebruik pijltjestoetsen om te kiezen`, en: `${n} station${s} found, use the arrow keys to choose` });
   }
 
   private render(): void {
@@ -56,7 +63,7 @@ export class Combobox {
         name.textContent = st.name;
         const status = document.createElement("span");
         status.className = `opt-status access-${st.status}`;
-        status.textContent = `${ACCESS_ICON[st.status]} ${ACCESS_TEXT[st.status]}`;
+        status.textContent = `${ACCESS_ICON[st.status]} ${accessText(st.status)}`;
         li.append(name, status);
         return li;
       }),

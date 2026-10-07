@@ -116,6 +116,54 @@ a {
   cursor: pointer;
   flex-shrink: 0;
 }
+.top-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex-shrink: 0;
+}
+@media (min-width: 600px) {
+  .top-actions {
+    flex-direction: row;
+    align-items: center;
+    gap: 16px;
+  }
+}
+
+/* language switch: "NL | EN", the current language filled in */
+.lang {
+  display: inline-flex;
+  border: 2px solid var(--ink-2);
+  border-radius: 999px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+.lang > * {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 40px;
+  padding: 0 10px;
+}
+.lang > :first-child {
+  border-radius: 999px 0 0 999px;
+}
+.lang > :last-child {
+  border-radius: 0 999px 999px 0;
+}
+.lang > [aria-current] {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+.lang > a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.lang > a:hover {
+  text-decoration: underline;
+}
 
 /* --- layout ------------------------------------------------------------------------------ */
 .layout {

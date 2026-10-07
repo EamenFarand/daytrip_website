@@ -50,11 +50,17 @@ function serveBuildData(): Plugin {
     res.setHeader("Content-Type", "application/json; charset=utf-8");
     fs.createReadStream(file).pipe(res);
   };
+  // There are no station pages in dev: like /station/<slug>/ gets the Dutch page, /en/station/<slug>/ gets the English one.
+  const english = (req: { url?: string }, _res: unknown, next: () => void) => {
+    if (/^\/en\/station\/[a-z0-9-]+\/?(?:[?#].*)?$/.test(req.url ?? "")) req.url = "/en/index.html";
+    next();
+  };
   return {
     name: "serve-build-data",
     configureServer(server) {
       server.middlewares.use("/data", handler);
       server.middlewares.use("/api/lifts", lifts);
+      server.middlewares.use(english);
     },
     configurePreviewServer(server) {
       server.middlewares.use("/data", handler);
@@ -65,7 +71,14 @@ function serveBuildData(): Plugin {
 
 export default defineConfig({
   plugins: [serveBuildData()],
-  // The map chunk is MapLibre itself (about 1 MB, 280 KB compressed), loaded after the page; don't warn about it.
-  build: { target: "es2022", outDir: siteDir(), emptyOutDir: true, chunkSizeWarningLimit: 1100 },
+  build: {
+    target: "es2022",
+    outDir: siteDir(),
+    emptyOutDir: true,
+    // The map chunk is MapLibre itself (about 1 MB, 280 KB compressed), loaded after the page; don't warn about it.
+    chunkSizeWarningLimit: 1100,
+    // One app, two pages: Dutch at /, English at /en/ (the app reads <html lang>).
+    rolldownOptions: { input: { nl: path.resolve(import.meta.dirname, "index.html"), en: path.resolve(import.meta.dirname, "en", "index.html") } },
+  },
   worker: { format: "es" },
 });

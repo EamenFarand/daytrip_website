@@ -46,6 +46,10 @@ describe("station search", () => {
     ["den haag cs", "GVC"],
     ["bijlmer", "ASB"],
     ["zandvoort", "ZVT"],
+    ["The Hague", "GVC"], // English names
+    ["the hague laan van noi", "LAA"],
+    ["Amsterdam Central Station", "ASD"],
+    ["utrecht central", "UT"],
   ])("%s -> %s", (query, code) => {
     expect(first(query)).toBe(code);
   });

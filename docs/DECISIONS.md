@@ -4,6 +4,33 @@ One entry per non-obvious decision: what, why, and what was rejected. Newest on 
 
 ---
 
+### 2026-10-07 — An English version under /en/, with a language switch
+**What:** Daan's request. Every page has an English twin under `/en/`: the home page, `/en/station/<slug>/` and `/en/station/`. A switch in the header ("NL | EN", the current language filled in) leads to the same page and view in the other language. Dutch stays the default at `/`.
+
+**How:**
+- One app for both languages. It reads the page's `<html lang>`.
+- The texts sit in the code where they're used, as `{ nl, en }` pairs, so a missing translation is a type error.
+- The page shell exists twice (`web/index.html` and `web/en/index.html`). A test checks that both have the same elements in the same order, so they can't drift apart.
+- `scripts/pages.ts` writes every page in both languages, with `hreflang` links between the twins, and the sitemap lists both.
+- The view (filters, selected station) stays in the hash, with the same keys in both languages. Switching keeps it, and shared links work in either language.
+- Wording:
+  - British English;
+  - "pram" for "kinderwagen";
+  - "platform" for "spoor", as NS's English journey planner says.
+- Links to NS go to NS's English pages. The English journey planner takes the same parameters; checked with Houten Castellum → Utrecht Centraal.
+- The search also understands "The Hague" and "Central (Station)".
+
+**Why:**
+- Expats and visitors with a pram need this as much as anyone.
+- English pages can be found from English searches.
+- The project planned English after Dutch (CLAUDE.md).
+
+**Rejected:**
+- *Picking the language from the browser and redirecting.* Many Dutch people use an English browser, and search engines would see only one language.
+- *Remembering the choice in a cookie or browser storage.* The site promises no cookies and stores nothing, and the URL already carries the language.
+- *One HTML file translated in the browser after loading.* The pages must make sense without JavaScript and to search engines.
+- *English slugs or hash keys.* Station names are the same in both languages, and one set of keys keeps links working across languages.
+
 ### 2026-10-07 — Reference days: the most stations served, not the most trips
 **What:** The build picks the Tue/Wed/Thu and the Saturday that serve the most *regular* Dutch stations (those with trains on at least half the days), then the most stops at those stations. It looks eight weeks ahead instead of four; ties go to the earliest. This replaces "the most rail trips in four weeks" (2026-09-29).
 

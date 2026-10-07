@@ -8,7 +8,8 @@ import "maplibre-gl/dist/maplibre-gl.css";
 import workerUrl from "maplibre-gl/dist/maplibre-gl-worker.mjs?worker&url";
 
 import { RAMP, liftColor } from "./colors";
-import { ACCESS_TEXT, changes, duration } from "./format";
+import { accessText, changes, duration, originText, outOfReach } from "./format";
+import { type Lang, lang } from "./i18n";
 import type { Verdict } from "./results";
 
 const STYLE = { light: "https://tiles.openfreemap.org/styles/positron", dark: "https://tiles.openfreemap.org/styles/dark" };
@@ -36,16 +37,20 @@ function soften(map: maplibregl.Map): void {
   }
 }
 
-const LOCALE = {
-  "Map.Title": "Kaart met bereikbare stations",
-  "NavigationControl.ZoomIn": "Inzoomen",
-  "NavigationControl.ZoomOut": "Uitzoomen",
-  "NavigationControl.ResetBearing": "Noorden boven",
-  "AttributionControl.ToggleAttribution": "Bronvermelding tonen of verbergen",
-  "Popup.Close": "Sluiten",
-  "CooperativeGesturesHandler.WindowsHelpText": "Houd Ctrl ingedrukt en scroll om in te zoomen",
-  "CooperativeGesturesHandler.MacHelpText": "Houd ⌘ ingedrukt en scroll om in te zoomen",
-  "CooperativeGesturesHandler.MobileHelpText": "Gebruik twee vingers om de kaart te verplaatsen",
+// MapLibre's own words are English; Dutch replaces them all.
+const LOCALE: Record<Lang, Record<string, string>> = {
+  en: { "Map.Title": "Map of reachable stations" },
+  nl: {
+    "Map.Title": "Kaart met bereikbare stations",
+    "NavigationControl.ZoomIn": "Inzoomen",
+    "NavigationControl.ZoomOut": "Uitzoomen",
+    "NavigationControl.ResetBearing": "Noorden boven",
+    "AttributionControl.ToggleAttribution": "Bronvermelding tonen of verbergen",
+    "Popup.Close": "Sluiten",
+    "CooperativeGesturesHandler.WindowsHelpText": "Houd Ctrl ingedrukt en scroll om in te zoomen",
+    "CooperativeGesturesHandler.MacHelpText": "Houd ⌘ ingedrukt en scroll om in te zoomen",
+    "CooperativeGesturesHandler.MobileHelpText": "Gebruik twee vingers om de kaart te verplaatsen",
+  },
 };
 
 type Theme = "light" | "dark";
@@ -143,7 +148,7 @@ export class StationMap {
         bounds: NL_BOUNDS,
         fitBoundsOptions: { padding: 16 },
         cooperativeGestures: true,
-        locale: LOCALE,
+        locale: LOCALE[lang],
         attributionControl: { compact: true },
         dragRotate: false,
         pitchWithRotate: false,
@@ -308,15 +313,14 @@ export class StationMap {
 function tip(v: Verdict): string {
   switch (v.category) {
     case "origin":
-      return "Vertrekstation";
+      return originText();
     case "reachable":
       return v.entry ? `${duration(v.entry[0])}, ${changes(v.entry[3])}` : "";
     case "not-step-free":
     case "unknown-access":
-      return ACCESS_TEXT[v.station.status];
     case "idle":
-      return ACCESS_TEXT[v.station.status];
+      return accessText(v.station.status);
     default:
-      return "Niet bereikbaar binnen je keuzes";
+      return outOfReach();
   }
 }

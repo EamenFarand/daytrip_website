@@ -87,6 +87,11 @@ Verify current URLs, formats, licences and access requirements yourself; don't t
 - Add `sitemap.xml` and canonical URLs. robots.txt allows the pages and keeps `/data/` disallowed.
 - All text is generated from the data by plain code, with no AI at runtime (principle 2). Editorial "what to do here" content stays out of v1.
 
+### English version
+*Added 2026-10-07 at Daan's request; done the same day (DECISIONS 2026-10-07).*
+- Every page also in English under `/en/`, with a "NL | EN" switch in the header that keeps the page and the view.
+- Same rules as the Dutch pages: works without JavaScript, `hreflang` links between the twins, both languages in the sitemap, no cookies or storage.
+
 ### Housekeeping
 - Done: Nextcloud ignores `.git`, `node_modules` and `.venv` (and `.env`); checked on 3 Oct.
 - *Added 2026-10-03 after a check of the live site:*

@@ -40,6 +40,12 @@ Search Console: domain verified and sitemap submitted on 3 Oct.
   - The about box explains the lift status (what it shows, the source, about ten minutes' delay, that it can be out of date), and the sources credit it.
   - A lift that has just come back keeps a softer warning for 30 minutes (Daan's choice A, DECISIONS 2026-10-04): the listener lists it as `back`, and the site says "net weer in gebruik". Site and listener have it since 4 Oct; checked live with UT-LIF-009 (Utrecht Centraal).
 - Also: the softer dark mode, the name Trapvrij, and a report link per station. Reports go to `meld@trapvrij.nl` (Cloudflare Email Routing) since 3 Oct.
+- **English version** (7 Oct, Daan's request, DECISIONS 2026-10-07):
+  - every page also exists under `/en/` (home, 395 station pages, `/en/station/`, `/en/404.html`);
+  - a "NL | EN" switch in the header leads to the same page and view;
+  - `hreflang` links connect the twins, and the sitemap lists both languages (794 pages);
+  - texts are `{ nl, en }` pairs in the code (`web/src/i18n.ts`), and a test keeps the two page shells identical in structure;
+  - checked locally: both directions of the switch, the station panel, phone width, light and dark, and axe with 0 violations on 6 pages.
 - **Visit counts:** Cloudflare Web Analytics, switched on for the Pages project; Cloudflare adds its script to each page on deploy (not to the 404 page). Checked 3 Oct on the live site: no cookies, nothing in browser storage. The footer says so (DECISIONS, 2026-10-03).
 
 ## Phase 3: left
@@ -66,7 +72,7 @@ Search Console: domain verified and sitemap submitted on 3 Oct.
   - search, filters, a map by travel time and shape, the list, the station panel, and URL state;
   - no cookies;
   - Lighthouse accessibility 100 and axe 0 violations;
-  - 47 unit tests.
+  - unit tests: 63 since the English version.
 
 ## Known limitations (fine for now)
 - Lighthouse performance on the live site is 56–85 (mobile, slow 4G).

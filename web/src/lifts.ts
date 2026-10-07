@@ -2,7 +2,8 @@
 // The data comes from the listener on Daan's home server (lifts/, DECISIONS 2026-10-02).
 // Stale data looks like no data: old status is shown as unknown, never as "all lifts work".
 
-import { clock, upperFirst } from "./format";
+import { clock, platformText, upperFirst } from "./format";
+import { tr } from "./i18n";
 import type { Entry, Lift, LiftStatus, Station } from "./types";
 
 export const SILENT_AFTER_MIN = 30; // two lifts resend every 5 minutes, so 30 quiet minutes = changes stopped
@@ -21,11 +22,21 @@ export function freshness(lifts: LiftStatus | null, now: Date): Freshness {
 }
 
 export function freshnessText(lifts: LiftStatus | null, fresh: Freshness): string {
-  if (fresh === "live" && lifts) return `Liftstatus van ${clock(minutesOfDay(lifts.updated))} uur.`;
-  if (fresh === "nightly" && lifts?.full_state_at) {
-    return `Liftstatus van ${clock(minutesOfDay(lifts.full_state_at))} uur vannacht; storingen van daarna kunnen ontbreken.`;
+  if (fresh === "live" && lifts) {
+    const at = clock(minutesOfDay(lifts.updated));
+    return tr({ nl: `Liftstatus van ${at} uur.`, en: `Lift status as of ${at}.` });
   }
-  return "De actuele liftstatus is nu niet bekend. Controleer de liften vóór vertrek.";
+  if (fresh === "nightly" && lifts?.full_state_at) {
+    const at = clock(minutesOfDay(lifts.full_state_at));
+    return tr({
+      nl: `Liftstatus van ${at} uur vannacht; storingen van daarna kunnen ontbreken.`,
+      en: `Lift status as of ${at} last night; later outages may be missing.`,
+    });
+  }
+  return tr({
+    nl: "De actuele liftstatus is nu niet bekend. Controleer de liften vóór vertrek.",
+    en: "The current lift status is not known right now. Check the lifts before you travel.",
+  });
 }
 
 function minutesOfDay(iso: string): number {
@@ -51,9 +62,15 @@ export function trouble(o: { status: string }): Trouble {
 /** What is wrong with a lift: "buiten gebruik", "status onbekend" or "sinds 21:43 weer in gebruik, …". */
 export function statusText(o: { status: string; since: string | null }): string {
   const t = trouble(o);
-  if (t === "unknown") return "status onbekend";
-  if (t === "back") return `${o.since ? `sinds ${clock(minutesOfDay(o.since))} ` : ""}weer in gebruik, maar was net nog buiten gebruik`;
-  return "buiten gebruik";
+  if (t === "unknown") return tr({ nl: "status onbekend", en: "status unknown" });
+  if (t === "back") {
+    const at = o.since ? clock(minutesOfDay(o.since)) : null;
+    return tr({
+      nl: `${at ? `sinds ${at} ` : ""}weer in gebruik, maar was net nog buiten gebruik`,
+      en: `back in service${at ? ` since ${at}` : ""}, but was out of order until just now`,
+    });
+  }
+  return tr({ nl: "buiten gebruik", en: "out of order" });
 }
 
 /** Lifts at a station that aren't working, or whose status is unknown. Nothing when the data can't be trusted. */
@@ -75,12 +92,20 @@ export function serves(lift: Lift, tracks: string[], role: Role): boolean {
   return lift.tracks.some((t) => used.has(trackNumber(t)));
 }
 
+/** Where a lift is: "spoor 14/15", or "hal of ingang" for one that serves no platform. */
+export function liftPlace(lift: Lift): string {
+  return lift.tracks.length ? platformText(lift.tracks) : tr({ nl: "hal of ingang", en: "hall or entrance" });
+}
+
 export function outText(o: OutLift): string {
-  const where = o.lift.tracks.length ? `spoor ${o.lift.tracks.join("/")}` : "hal of ingang";
-  return `lift ${o.lift.code ?? o.lift.id} (${where}): ${statusText(o)}`;
+  return `lift ${o.lift.code ?? o.lift.id} (${liftPlace(o.lift)}): ${statusText(o)}`;
 }
 
 export type Role = "vertrek" | "overstap" | "aankomst";
+
+export function roleText(role: Role): string {
+  return tr({ vertrek: { nl: "vertrek", en: "departure" }, overstap: { nl: "overstap", en: "change" }, aankomst: { nl: "aankomst", en: "arrival" } }[role]);
+}
 
 export interface StationWarning {
   station: Station;
@@ -115,7 +140,9 @@ export function journeyWarnings(
 /** "⚠ lift buiten gebruik", "⚠ liftstatus onbekend" or "⚠ lift net weer in gebruik", for a station on the journey. */
 export function liftNote(w: StationWarning): string {
   const kinds = new Set(w.out.map(trouble));
-  return kinds.has("out") ? "⚠ lift buiten gebruik" : kinds.has("unknown") ? "⚠ liftstatus onbekend" : "⚠ lift net weer in gebruik";
+  if (kinds.has("out")) return tr({ nl: "⚠ lift buiten gebruik", en: "⚠ lift out of order" });
+  if (kinds.has("unknown")) return tr({ nl: "⚠ liftstatus onbekend", en: "⚠ lift status unknown" });
+  return tr({ nl: "⚠ lift net weer in gebruik", en: "⚠ lift just back in service" });
 }
 
 /** The list's warning line: stations with a lift out of order first, then those where a lift has just come back. */
@@ -123,6 +150,9 @@ export function warnLine(warnings: StationWarning[]): string {
   const justBack = (w: StationWarning) => w.out.every((o) => trouble(o) === "back");
   const out = warnings.filter((w) => !justBack(w)).map((w) => w.station.name);
   const back = warnings.filter(justBack).map((w) => w.station.name);
-  const parts = [out.length ? `Liftstoring: ${out.join(", ")}` : "", back.length ? `lift net weer in gebruik: ${back.join(", ")}` : ""];
+  const parts = [
+    out.length ? tr({ nl: `Liftstoring: ${out.join(", ")}`, en: `Lift out of order: ${out.join(", ")}` }) : "",
+    back.length ? tr({ nl: `lift net weer in gebruik: ${back.join(", ")}`, en: `lift just back in service: ${back.join(", ")}` }) : "",
+  ];
   return `⚠ ${upperFirst(parts.filter(Boolean).join("; "))}`;
 }

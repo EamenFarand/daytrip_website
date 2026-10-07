@@ -11,10 +11,15 @@ const COLLOQUIAL: Record<string, string[]> = {
   EHS: ["beukenlaan"],
 };
 
-/** Word-level shorthand, applied to both the query and the station names ("a/d" = "aan de"). */
+/** Word-level shorthand, applied to both the query and the station names ("a/d" = "aan de").
+ * Also the English words visitors type: "Amsterdam Central Station", "The Hague". */
 const SHORTHAND: Record<string, string> = {
   cs: "centraal",
   ctr: "centraal",
+  central: "centraal",
+  station: "",
+  the: "de",
+  hague: "haag",
   adam: "amsterdam",
   rdam: "rotterdam",
   dh: "de haag",
